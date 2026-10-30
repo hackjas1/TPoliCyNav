@@ -628,6 +628,23 @@ def run_app():
             st.toast("Dialogue history cleared. RAG memory reset.", icon="🧹")
             st.rerun()
 
+        # Institutional Capstone Card in Sidebar
+        st.markdown("""
+        <div style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 0.85rem; margin-top: 1.25rem; text-align: center;">
+            <div style="font-size: 0.82rem; font-weight: 800; color: #064E3B;">Talibon Polytechnic College</div>
+            <div style="font-size: 0.72rem; color: #64748B; margin-top: 0.15rem;">Bohol, Philippines • A.Y. 2026–2027</div>
+            <div style="font-size: 0.74rem; font-weight: 600; color: #059669; margin-top: 0.35rem;">IS Professional Elective #4 Capstone</div>
+            <div style="font-size: 0.73rem; color: #334155; margin-top: 0.35rem; line-height: 1.45;">
+                <strong style="color: #065F46;">Team Kuys:</strong><br>
+                Eduardo Avenido Jr. • Christian Paul Larosa<br>
+                Nielbert Garcia • Marcel Avergonzado
+            </div>
+            <div style="font-size: 0.68rem; color: #94A3B8; margin-top: 0.45rem; border-top: 1px dashed #CBD5E1; padding-top: 0.35rem;">
+                Official AI Policy Conversational Agent
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
     # -------------------------------------------------------------------------
     # MAIN CONTENT AREA: HEADER & CHAT CANVAS
     # -------------------------------------------------------------------------
@@ -784,9 +801,20 @@ def run_app():
                                     st.rerun()
 
     # -------------------------------------------------------------------------
-    # USER INPUT FIELD & QUERY PROCESSING
+    # FIXED BOTTOM CANVAS: INPUT FIELD & DOCKED FOOTER
     # -------------------------------------------------------------------------
-    user_typed = st.chat_input("Ask any question regarding TPC admissions, degree programs, uniform rules, curfew...")
+    with st.bottom:
+        user_typed = st.chat_input("Ask any question regarding TPC admissions, degree programs, uniform rules, curfew...")
+        st.markdown("""
+        <div style="text-align: center; font-size: 0.74rem; color: #64748B; padding: 0.25rem 0 0.45rem 0; line-height: 1.45;">
+            <strong>Talibon Polytechnic College (TPC)</strong> • Bohol, Philippines &nbsp;|&nbsp; 
+            <em>IS Professional Elective #4 Capstone Project</em> &nbsp;|&nbsp; 
+            <strong style="color: #059669;">Team Kuys</strong><br>
+            <span style="font-size: 0.70rem; color: #94A3B8;">
+                Disclaimer: Synthesized from official TPC documents (Handbook v.04, Ord. 127, RA 10931). For official certifications, consult the Registrar.
+            </span>
+        </div>
+        """, unsafe_allow_html=True)
 
     # Determine Active Prompt: from quick launch buttons, follow-ups, or chat input
     active_prompt = None
@@ -849,20 +877,6 @@ def run_app():
             "follow_ups": follow_ups
         })
         st.rerun()
-
-    # -------------------------------------------------------------------------
-    # INSTITUTIONAL FOOTER
-    # -------------------------------------------------------------------------
-    st.markdown("""
-    <div class="tpc-footer">
-        <strong>Talibon Polytechnic College (TPC)</strong> • Bohol, Philippines<br>
-        Course Capstone Project for <em>IS Professional Elective #4 (Generative AI Systems)</em> • A.Y. 2026–2027<br>
-        <span style="color: #059669; font-weight: 600;">Team Kuys:</span> Eduardo Avenido Jr. • Christian Paul Larosa • Nielbert Garcia • Marcel Avergonzado<br>
-        <span style="font-size: 0.75rem; color: #94A3B8; margin-top: 0.35rem; display: inline-block;">
-            Disclaimer: TPoliCynav provides guidance synthesized from official college documents. For certified documents, visit the Registrar's Office.
-        </span>
-    </div>
-    """, unsafe_allow_html=True)
 
 
 if __name__ == "__main__":
