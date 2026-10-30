@@ -17,10 +17,11 @@ Developed for **IS Professional Elective #4: Generative AI Systems** (1st Semest
 
 | Member Name | Student Role & Ownership | Primary Deliverables |
 |---|---|---|
-| **Eduardo Avenido Jr.** | Data Pipeline & Vector Indexing Lead | Corpus Curation, Sanitation Pipeline, Ingestion Engine (`scripts/ingest_pipeline.py`) |
-| **Christian Paul Larosa** | RAG Orchestration & LangChain Architect | LangChain Custom Retriever, Conversational Memory (`app/rag_engine.py`, `app/memory_manager.py`) |
-| **Nielbert Garcia** | Prompt Engineering & Evaluation Lead | 3-Tier Prompt Architecture, Scope Containment, Benchmark Suite (`scripts/demo_evaluation.py`) |
-| **Marcel Avergonzado** | Interface Design & Cloud Deployment Lead | Streamlit Web UI (TPC Green Theme), Dockerfile, Railway Cloud Deployment via GitHub |
+| **Eduardo Avenido Jr.** | Presenter 1 & Data Pipeline Lead | Corpus Curation, Ingestion Pipeline, Institutional Policy Dataset Curation (`scripts/ingest_pipeline.py`) |
+| **Christian Paul G. La Rosa** | System Creator & Lead AI Architect | Full System Architecture, RAG Pipeline, Retrieval Engine & Streamlit Interface (`app/rag_engine.py`, `app/streamlit_app.py`) |
+| **Nielbert Garcia** | Presenter 2 & Architecture Lead | System Architecture Evaluation, Benchmark Suite, Scope Containment (`scripts/demo_evaluation.py`) |
+| **Marcel Avergonzado** | Presenter 3 & UI/Deployment Lead | Public Web UI Live Testing, Docker Containerization, Railway Cloud CI/CD Deployment |
+| **Ronald M. Barril** | Presenter 4 & Future Roadmap Lead | Project Roadmap Synthesis, Vernacular Expansion Research, Documentation & Checklist Verification |
 
 ---
 

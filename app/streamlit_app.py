@@ -1206,8 +1206,8 @@ def run_app():
             <div style="font-size: 0.74rem; font-weight: 600; color: #059669; margin-top: 0.35rem;">IS Professional Elective #4 Capstone</div>
             <div style="font-size: 0.73rem; color: #334155; margin-top: 0.35rem; line-height: 1.45;">
                 <strong style="color: #065F46;">Team Kuys:</strong><br>
-                Eduardo Avenido Jr. • Christian Paul Larosa<br>
-                Nielbert Garcia • Marcel Avergonzado
+                Eduardo Avenido Jr. • Christian Paul G. La Rosa<br>
+                Nielbert Garcia • Marcel Avergonzado • Ronald M. Barril
             </div>
             <div style="font-size: 0.68rem; color: #94A3B8; margin-top: 0.45rem; border-top: 1px dashed #CBD5E1; padding-top: 0.35rem;">
                 Official AI Policy Conversational Agent
@@ -1496,7 +1496,7 @@ def run_app():
         <div style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.25rem; text-align: center;">
             <h4 style="margin: 0; color: #064E3B;">Talibon Polytechnic College • Bohol, Philippines</h4>
             <p style="margin: 0.35rem 0; color: #64748B; font-size: 0.85rem;">Course Capstone Project for <strong>IS Professional Elective #4 (Generative AI Systems)</strong> • A.Y. 2026–2027</p>
-            <p style="margin: 0; color: #059669; font-weight: 700; font-size: 0.9rem;">Team Kuys: Eduardo Avenido Jr. • Christian Paul Larosa • Nielbert Garcia • Marcel Avergonzado</p>
+            <p style="margin: 0; color: #059669; font-weight: 700; font-size: 0.9rem;">Team Kuys: Eduardo Avenido Jr. • Christian Paul G. La Rosa • Nielbert Garcia • Marcel Avergonzado • Ronald M. Barril</p>
         </div>
         """, unsafe_allow_html=True)
 

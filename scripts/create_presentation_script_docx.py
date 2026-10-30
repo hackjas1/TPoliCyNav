@@ -101,24 +101,25 @@ def build_script_document():
     
     p_sub = doc.add_paragraph()
     p_sub.paragraph_format.space_after = Pt(12)
-    r_sub = p_sub.add_run("Official 5-to-8 Minute Video Recording Guide based on final_presentation_guide.pdf")
+    r_sub = p_sub.add_run("Official 5-to-8 Minute Video Recording Guide with Assigned Speaker Roles (final_presentation_guide.pdf)")
     r_sub.font.name = "Calibri"
-    r_sub.font.size = Pt(12)
+    r_sub.font.size = Pt(11.5)
     r_sub.font.italic = True
     r_sub.font.color.rgb = c_muted
 
     # =========================================================================
     # PROJECT & SUBMISSION OVERVIEW TABLE
     # =========================================================================
-    tbl_info = doc.add_table(rows=6, cols=2)
+    tbl_info = doc.add_table(rows=7, cols=2)
     tbl_info.alignment = WD_TABLE_ALIGNMENT.CENTER
     tbl_info.autofit = False
     
     info_data = [
         ("Course & Project", "IS Professional Elective #4 (Generative AI Systems) — Capstone RAG Application"),
         ("Project Title", "TPoliCynav: The TPC Policy Navigator (AI Conversational Agent)"),
-        ("Capstone Team", "Team Kuys: Eduardo Avenido Jr. • Christian Paul Larosa • Nielbert Garcia • Marcel Avergonzado"),
-        ("Target Video Length", "5 to 8 Minutes (Structured directly to meet 100/100 Rubric Points)"),
+        ("Capstone Group (Team Kuys)", "Eduardo Avenido Jr. • Christian Paul G. La Rosa • Nielbert Garcia • Marcel Avergonzado • Ronald M. Barril"),
+        ("System Creator & Architect", "Christian Paul G. La Rosa (Lead AI & System Developer — Creator of TPoliCynav)"),
+        ("Assigned Video Presenters", "1. Eduardo Avenido Jr.  |  2. Nielbert Garcia  |  3. Marcel Avergonzado  |  4. Ronald M. Barril"),
         ("Live Deployed App URL", "https://tpolicynav-production.up.railway.app (Public, Zero-Login Required)"),
         ("Public GitHub Repository", "https://github.com/hackjas1/TPoliCyNav.git (Includes README & .env.example)")
     ]
@@ -155,10 +156,10 @@ def build_script_document():
     p_div.paragraph_format.space_after = Pt(12)
 
     # =========================================================================
-    # TIMING & RUBRIC ALIGNMENT BREAKDOWN
+    # TIMING & SPEAKER ASSIGNMENT BREAKDOWN
     # =========================================================================
     h_overview = doc.add_heading(level=1)
-    r_h_over = h_overview.add_run("📋 Video Section Breakdown & Timing Map")
+    r_h_over = h_overview.add_run("📋 Video Section Breakdown & Presenter Rotation")
     r_h_over.font.name = "Calibri"
     r_h_over.font.color.rgb = c_primary
     
@@ -166,20 +167,20 @@ def build_script_document():
     p_over_desc.paragraph_format.space_after = Pt(8)
     r_od = p_over_desc.add_run(
         "According to the official grading rubric, the demo video must cover 5 parts in exact sequential order. "
-        "Here is the recommended timing to hit the sweet spot between 5 and 7 minutes:"
+        "The speaking roles are distributed across our 4 presenters (Christian Paul G. La Rosa is credited as the system creator):"
     )
     r_od.font.name = "Calibri"
     r_od.font.size = Pt(10.5)
 
-    tbl_timing = doc.add_table(rows=6, cols=3)
+    tbl_timing = doc.add_table(rows=6, cols=4)
     tbl_timing.alignment = WD_TABLE_ALIGNMENT.CENTER
     timing_data = [
-        ("Part & Order", "Required Topic / Content", "Estimated Duration"),
-        ("Part 1: The Problem & Data", "Problem statement & 7 official TPC policy knowledge sources", "0:00 – 1:15 (1 min 15s)"),
-        ("Part 2: Technical Architecture", "Embedding model, Pinecone vector store, LLM, LangChain, guardrail", "1:15 – 2:30 (1 min 15s)"),
-        ("Part 3: Live Public Walkthrough", "Public Railway link, zero login, UI layout, masthead, mobile responsiveness", "2:30 – 3:30 (1 min 00s)"),
-        ("Part 4: Live Test Inquiries", "3 questions: Programs offered, Curfew rules, Out-of-scope refusal", "3:30 – 5:30 (2 min 00s)"),
-        ("Part 5: Future Improvements", "Multilingual (Bisaya), SIS integration, voice input, conclusion", "5:30 – 6:30 (1 min 00s)")
+        ("Part & Order", "Assigned Presenter", "Required Topic / Content", "Estimated Duration"),
+        ("Part 1: Problem & Data", "Eduardo Avenido Jr.", "Team intro, problem statement, 7 official TPC policy sources", "0:00 – 1:30 (1m 30s)"),
+        ("Part 2: Architecture", "Nielbert Garcia", "BGE-Small embedding, Pinecone vector store, 0.50 guardrail, LangChain", "1:30 – 2:45 (1m 15s)"),
+        ("Part 3: Live Walkthrough", "Marcel Avergonzado", "Public Railway link, zero login, UI layout, mobile responsiveness", "2:45 – 3:45 (1m 00s)"),
+        ("Part 4: Live Test Inquiries", "Marcel Avergonzado", "3 questions: Programs offered, Curfew rules, Out-of-scope refusal", "3:45 – 5:15 (1m 30s)"),
+        ("Part 5: Improvements & Close", "Ronald M. Barril", "Multilingual (Bisaya), SIS integration, voice input, conclusion", "5:15 – 6:30 (1m 15s)")
     ]
 
     for r_idx, row_vals in enumerate(timing_data):
@@ -188,21 +189,23 @@ def build_script_document():
         for c_idx, val in enumerate(row_vals):
             c = row.cells[c_idx]
             if c_idx == 0:
-                c.width = Inches(1.8)
+                c.width = Inches(1.5)
             elif c_idx == 1:
-                c.width = Inches(3.4)
+                c.width = Inches(1.6)
+            elif c_idx == 2:
+                c.width = Inches(2.3)
             else:
-                c.width = Inches(1.3)
+                c.width = Inches(1.1)
                 
             bg_col = "E2E8F0" if is_hdr else ("F8FAFC" if r_idx % 2 == 0 else "FFFFFF")
             set_cell_background(c, bg_col)
-            set_cell_margins(c, top=80, bottom=80, left=90, right=90)
+            set_cell_margins(c, top=80, bottom=80, left=80, right=80)
             
             p = c.paragraphs[0]
             p.paragraph_format.space_after = Pt(0)
             run = p.add_run(val)
             run.font.name = "Calibri"
-            run.font.size = Pt(9.5 if not is_hdr else 10)
+            run.font.size = Pt(9 if not is_hdr else 9.5)
             run.font.bold = is_hdr
             if is_hdr:
                 run.font.color.rgb = c_primary
@@ -210,73 +213,91 @@ def build_script_document():
     doc.add_page_break()
 
     # =========================================================================
-    # PART 1: THE PROBLEM & KNOWLEDGE SOURCE
+    # PART 1: THE PROBLEM & KNOWLEDGE SOURCE (EDUARDO AVENIDO JR.)
     # =========================================================================
     h1 = doc.add_heading(level=1)
-    r1 = h1.add_run("Part 1: The Problem & Knowledge Sources Used (0:00 – 1:15)")
+    r1 = h1.add_run("Part 1: The Problem & Knowledge Sources Used (0:00 – 1:30)")
     r1.font.name = "Calibri"
     r1.font.color.rgb = c_primary
 
+    p_spk1 = doc.add_paragraph()
+    p_spk1.paragraph_format.space_after = Pt(4)
+    r_s1 = p_spk1.add_run("🎙️ ASSIGNED PRESENTER: EDUARDO AVENIDO JR.")
+    r_s1.font.name = "Calibri"
+    r_s1.font.bold = True
+    r_s1.font.color.rgb = c_primary
+
     add_callout_box(
         doc,
-        "Record screen showing the opening title slide, or camera with the speaker on screen, "
-        "then transition to displaying the official documents folder (TPC Student Handbook v.04, Talibon Ordinance 127, etc.)."
+        "Record screen showing the opening title slide with Team Kuys member names, or camera with Eduardo Avenido Jr. on screen. "
+        "Transition to displaying the official documents folder (TPC Student Handbook v.04, Talibon Ordinance 127, etc.)."
     )
 
     p1_spk = doc.add_paragraph()
     p1_spk.paragraph_format.space_after = Pt(6)
     p1_spk.paragraph_format.line_spacing = 1.2
     
-    r_spk_tag = p1_spk.add_run("🎙️ PRESENTER SCRIPT:\n")
+    r_spk_tag = p1_spk.add_run("SPEAKING SCRIPT:\n")
     r_spk_tag.bold = True
     r_spk_tag.font.color.rgb = c_accent
     
     p1_text = (
-        '"Good day, instructor and classmates! Today, we are proud to present our Generative AI capstone project: '
-        'TPoliCynav — The TPC Policy Navigator. We are Team Kuys, composed of Eduardo Avenido Jr., Christian Paul Larosa, '
-        'Nielbert Garcia, and Marcel Avergonzado.\n\n'
+        '"Good day, instructor and classmates! Welcome to our Generative AI capstone presentation. '
+        'We are Team Kuys from Talibon Polytechnic College in Bohol, composed of myself, Eduardo Avenido Jr., '
+        'Christian Paul G. La Rosa — who is our lead AI developer and the creator of this entire project — along with '
+        'Nielbert Garcia, Marcel Avergonzado, and Ronald M. Barril.\n\n'
+        'Today, we are presenting TPoliCynav: The TPC Policy Navigator.\n\n'
         'Let’s begin with the problem we set out to solve:\n\n'
-        'At Talibon Polytechnic College in Bohol, thousands of students regularly have critical questions about college guidelines — '
+        'At Talibon Polytechnic College, thousands of students regularly have critical questions regarding institutional guidelines — '
         'from freshman admission criteria and retention GWA, to examination dress codes, municipal boarding house curfews, and '
         'CHED scholarship subsidies. However, these rules are scattered across thick 200-page printed PDF handbooks and municipal ordinances. '
         'Students often rely on word-of-mouth rumors, or face long queues at the Registrar and Student Affairs offices.\n\n'
-        'To solve this, we built TPoliCynav: a specialized, retrieval-augmented conversational agent that delivers authoritative, '
+        'To solve this, our group developed TPoliCynav: a specialized, retrieval-augmented conversational agent that delivers authoritative, '
         'instant, and verified answers grounded exclusively in official institutional records.\n\n'
         'Our knowledge base is built from 7 verified college sources:\n'
         '1. The latest 202-page approved TPC Student Handbook Version 04;\n'
-        '2. Talibon Municipal Ordinance Number 127 regarding boarding house safety and 10:00 PM curfews;\n'
+        '2. Talibon Municipal Ordinance Number 127 regarding boarding house safety standards and 10:00 PM curfews;\n'
         '3. The official TPC Uniform and Grooming Standards Guide;\n'
         '4. TPC Admissions and TPCAT Examination Guidelines;\n'
         '5. Republic Act 10931 on CHED Free Higher Education;\n'
         '6. GSIS STEM Scholarship Subsidy maintainability rules; and\n'
-        '7. Joint PNP-TPC Campus Safety and Curfew Inspection Memorandums."'
+        '7. Joint PNP-TPC Campus Safety and Curfew Inspection Memorandums.\n\n'
+        'Now, I will pass the floor over to Nielbert Garcia to explain the technical architecture and RAG pipeline powering TPoliCynav."'
     )
     p1_spk.add_run(p1_text).font.size = Pt(11)
 
     # =========================================================================
-    # PART 2: THE ARCHITECTURE
+    # PART 2: THE ARCHITECTURE (NIELBERT GARCIA)
     # =========================================================================
     h2 = doc.add_heading(level=1)
-    r2 = h2.add_run("Part 2: Technical Architecture & RAG Pipeline (1:15 – 2:30)")
+    r2 = h2.add_run("Part 2: Technical Architecture & RAG Pipeline (1:30 – 2:45)")
     r2.font.name = "Calibri"
     r2.font.color.rgb = c_primary
+
+    p_spk2 = doc.add_paragraph()
+    p_spk2.paragraph_format.space_after = Pt(4)
+    r_s2 = p_spk2.add_run("🎙️ ASSIGNED PRESENTER: NIELBERT GARCIA")
+    r_s2.font.name = "Calibri"
+    r_s2.font.bold = True
+    r_s2.font.color.rgb = c_primary
 
     add_callout_box(
         doc,
         "Display the 'About the Chatbot & Architecture' tab on the live website, or a clean architecture diagram slide "
-        "showing the flow: PDF Documents -> Chunking -> BGE-Small -> Pinecone Vector Store -> Cosine Guardrail -> LLM -> Streamlit UI."
+        "showing the flow: PDF Documents -> Chunking -> BGE-Small -> Pinecone Vector Store -> 0.50 Cosine Guardrail -> LLM -> Streamlit UI."
     )
 
     p2_spk = doc.add_paragraph()
     p2_spk.paragraph_format.space_after = Pt(6)
     p2_spk.paragraph_format.line_spacing = 1.2
     
-    r_spk_tag = p2_spk.add_run("🎙️ PRESENTER SCRIPT:\n")
+    r_spk_tag = p2_spk.add_run("SPEAKING SCRIPT:\n")
     r_spk_tag.bold = True
     r_spk_tag.font.color.rgb = c_accent
     
     p2_text = (
-        '"Now let’s look under the hood at the technical architecture powering TPoliCynav.\n\n'
+        '"Thank you, Eduardo! Good day everyone, I am Nielbert Garcia, and I will walk you through the technical architecture '
+        'powering TPoliCynav.\n\n'
         'We designed a production-grade, zero-hallucination RAG pipeline following these five technical pillars:\n\n'
         '1. Text Ingestion & Chunking: We ingested our 7 institutional sources, parsed them, and split them into 128 normalized chunks. '
         'Each chunk contains rich metadata identifying the exact document name, page number, and policy section.\n\n'
@@ -292,17 +313,25 @@ def build_script_document():
         'This allows students to ask natural follow-up questions — like saying \"What about shoes?\" after asking about uniforms — and the model '
         'resolves the context accurately.\n\n'
         '6. Deployment & Hosting: The application is containerized with Docker and continuously deployed on Railway Cloud via GitHub CI/CD, '
-        'running 24/7 on a public link without requiring any login."'
+        'running 24/7 on a public link without requiring any login.\n\n'
+        'Now, I will turn the presentation over to Marcel Avergonzado for a live walkthrough of our deployed app and sample test questions."'
     )
     p2_spk.add_run(p2_text).font.size = Pt(11)
 
     # =========================================================================
-    # PART 3: LIVE WALKTHROUGH OF THE DEPLOYED APP
+    # PART 3: LIVE WALKTHROUGH (MARCEL AVERGONZADO)
     # =========================================================================
     h3 = doc.add_heading(level=1)
-    r3 = h3.add_run("Part 3: Live Walkthrough of the Public Deployed App (2:30 – 3:30)")
+    r3 = h3.add_run("Part 3: Live Walkthrough of the Public Deployed App (2:45 – 3:45)")
     r3.font.name = "Calibri"
     r3.font.color.rgb = c_primary
+
+    p_spk3 = doc.add_paragraph()
+    p_spk3.paragraph_format.space_after = Pt(4)
+    r_s3 = p_spk3.add_run("🎙️ ASSIGNED PRESENTER: MARCEL AVERGONZADO")
+    r_s3.font.name = "Calibri"
+    r_s3.font.bold = True
+    r_s3.font.color.rgb = c_primary
 
     add_callout_box(
         doc,
@@ -315,14 +344,14 @@ def build_script_document():
     p3_spk.paragraph_format.space_after = Pt(6)
     p3_spk.paragraph_format.line_spacing = 1.2
     
-    r_spk_tag = p3_spk.add_run("🎙️ PRESENTER SCRIPT:\n")
+    r_spk_tag = p3_spk.add_run("SPEAKING SCRIPT:\n")
     r_spk_tag.bold = True
     r_spk_tag.font.color.rgb = c_accent
     
     p3_text = (
-        '"Next, let’s demonstrate the live, publicly deployed application.\n\n'
-        'As you can see on screen, our app is hosted live on Railway at tpolicynav-production.up.railway.app. '
-        'Following the project requirements, anyone can open this link on their laptop or smartphone without creating an account or logging in.\n\n'
+        '"Thank you, Nielbert! Hello everyone, I am Marcel Avergonzado, and I will be demonstrating the live, publicly deployed application.\n\n'
+        'As you can see on my screen, our app is hosted live on Railway at tpolicynav-production.up.railway.app. '
+        'Meeting the project rubric 100%, anyone can open this link on their laptop, tablet, or smartphone without installing anything or creating an account.\n\n'
         'Let’s take a quick tour of the user interface:\n'
         '• At the top, we have our official TPC masthead displaying the official Talibon Polytechnic College seal and portal title.\n'
         '• On the left sidebar, we have real-time System Diagnostics showing the Pinecone vector connection, active corpus chunk count, '
@@ -336,23 +365,19 @@ def build_script_document():
     p3_spk.add_run(p3_text).font.size = Pt(11)
 
     # =========================================================================
-    # PART 4: AT LEAST 3 SAMPLE QUESTIONS
+    # PART 4: AT LEAST 3 SAMPLE QUESTIONS (MARCEL AVERGONZADO)
     # =========================================================================
     h4 = doc.add_heading(level=1)
-    r4 = h4.add_run("Part 4: Live Test Inquiries — 3 Sample Questions (3:30 – 5:30)")
+    r4 = h4.add_run("Part 4: Live Test Inquiries — 3 Sample Questions (3:45 – 5:15)")
     r4.font.name = "Calibri"
     r4.font.color.rgb = c_primary
 
-    p_p4_note = doc.add_paragraph()
-    p_p4_note.paragraph_format.space_after = Pt(6)
-    r_note_r = p_p4_note.add_run(
-        "Important Rubric Requirement: Demonstrate at least 3 live questions, including at least one question "
-        "that the documents CANNOT answer to prove the guardrails work without hallucinations."
-    )
-    r_note_r.font.name = "Calibri"
-    r_note_r.font.italic = True
-    r_note_r.font.bold = True
-    r_note_r.font.color.rgb = c_accent
+    p_spk4 = doc.add_paragraph()
+    p_spk4.paragraph_format.space_after = Pt(4)
+    r_s4 = p_spk4.add_run("🎙️ ASSIGNED PRESENTER: MARCEL AVERGONZADO (CONTINUED)")
+    r_s4.font.name = "Calibri"
+    r_s4.font.bold = True
+    r_s4.font.color.rgb = c_primary
 
     # Question 1
     add_callout_box(
@@ -365,7 +390,7 @@ def build_script_document():
     p4_q1 = doc.add_paragraph()
     p4_q1.paragraph_format.space_after = Pt(6)
     p4_q1.paragraph_format.line_spacing = 1.2
-    p4_q1.add_run("🎙️ PRESENTER SCRIPT (Sample Question 1 — Academic Scope):\n").bold = True
+    p4_q1.add_run("SPEAKING SCRIPT (Sample Question 1 — Academic Scope):\n").bold = True
     p4_q1_text = (
         '"Now let’s run our three test questions.\n\n'
         'Sample Question 1: An in-scope academic inquiry.\n'
@@ -392,7 +417,7 @@ def build_script_document():
     p4_q2 = doc.add_paragraph()
     p4_q2.paragraph_format.space_after = Pt(6)
     p4_q2.paragraph_format.line_spacing = 1.2
-    p4_q2.add_run("🎙️ PRESENTER SCRIPT (Sample Question 2 — Community & Municipal Policy):\n").bold = True
+    p4_q2.add_run("SPEAKING SCRIPT (Sample Question 2 — Community & Municipal Policy):\n").bold = True
     p4_q2_text = (
         '"Sample Question 2: A community boarding house and safety policy.\n'
         'We type: \"What are the curfew hours for boarding houses under Talibon Municipal Ordinance 127?\"\n\n'
@@ -417,7 +442,7 @@ def build_script_document():
     p4_q3 = doc.add_paragraph()
     p4_q3.paragraph_format.space_after = Pt(6)
     p4_q3.paragraph_format.line_spacing = 1.2
-    p4_q3.add_run("🎙️ PRESENTER SCRIPT (Sample Question 3 — Out-of-Scope Refusal Guardrail):\n").bold = True
+    p4_q3.add_run("SPEAKING SCRIPT (Sample Question 3 — Out-of-Scope Refusal Guardrail):\n").bold = True
     p4_q3_text = (
         '"Sample Question 3: The critical negative test — a question the documents CANNOT answer.\n'
         'The project rubric strictly requires that our chatbot handle out-of-scope inquiries without making things up.\n'
@@ -429,17 +454,25 @@ def build_script_document():
         'Our guardrail intercepted the request and safely responded: '
         '\"I apologize, but this topic is outside the official scope of Talibon Polytechnic College institutional policies. '
         'For college-related inquiries, please consult the Registrar or Office of Student Affairs.\"\n\n'
-        'This proves our RAG pipeline has strict containment and will never mislead students with fabricated answers."'
+        'This proves our RAG pipeline has strict containment and will never mislead students with fabricated answers.\n\n'
+        'Now, I will pass the microphone to Ronald M. Barril to discuss our planned future improvements and conclude our presentation."'
     )
     p4_q3.add_run(p4_q3_text).font.size = Pt(11)
 
     # =========================================================================
-    # PART 5: WHAT YOU WOULD IMPROVE & CONCLUSION
+    # PART 5: WHAT YOU WOULD IMPROVE & CONCLUSION (RONALD M. BARRIL)
     # =========================================================================
     h5 = doc.add_heading(level=1)
-    r5 = h5.add_run("Part 5: What We Would Improve & Conclusion (5:30 – 6:30)")
+    r5 = h5.add_run("Part 5: What We Would Improve & Conclusion (5:15 – 6:30)")
     r5.font.name = "Calibri"
     r5.font.color.rgb = c_primary
+
+    p_spk5 = doc.add_paragraph()
+    p_spk5.paragraph_format.space_after = Pt(4)
+    r_s5 = p_spk5.add_run("🎙️ ASSIGNED PRESENTER: RONALD M. BARRIL")
+    r_s5.font.name = "Calibri"
+    r_s5.font.bold = True
+    r_s5.font.color.rgb = c_primary
 
     add_callout_box(
         doc,
@@ -450,21 +483,25 @@ def build_script_document():
     p5_spk = doc.add_paragraph()
     p5_spk.paragraph_format.space_after = Pt(6)
     p5_spk.paragraph_format.line_spacing = 1.2
-    p5_spk.add_run("🎙️ PRESENTER SCRIPT:\n").bold = True
+    p5_spk.add_run("SPEAKING SCRIPT:\n").bold = True
     p5_text = (
-        '"To conclude our presentation, here are the four concrete improvements we would implement in future versions of TPoliCynav:\n\n'
+        '"Thank you, Marcel! Good day everyone, I am Ronald M. Barril, and I will present our roadmap for future improvements '
+        'and conclude our presentation.\n\n'
+        'While TPoliCynav successfully resolves the core challenges of institutional policy retrieval, here are the four concrete '
+        'improvements we would implement in future versions:\n\n'
         '1. Vernacular Language Support (Cebuano / Bisaya): While our current model handles English and Tagalog well, '
-        'many students in Bohol express complex policy questions naturally in Bisaya. Adding bilingual embeddings will further increase accessibility.\n\n'
+        'many students in Bohol express complex policy inquiries naturally in Bisaya. Adding bilingual embeddings will further increase accessibility.\n\n'
         '2. Voice-to-Text & Audio Accessibility: Integrating speech-to-text models like Whisper so visually impaired students '
-        'or users on the go can speak their policy questions and listen to audio answers.\n\n'
+        'or users on mobile devices can speak their policy questions and listen to synthesized audio answers.\n\n'
         '3. Direct Student Information System (SIS) Integration: Connecting the chatbot securely to student clearance databases '
         'so enrolled students can authenticate to check personalized items, such as graduation clearances and remaining scholarship balances.\n\n'
         '4. Dynamic Administrative Knowledge Updates: Building an administrative web upload portal for college deans and coordinators '
         'to re-index new academic calendars and department announcements in real time without restarting the server.\n\n'
         'All source code, Docker configs, documentation, and the .env.example are publicly available in our GitHub repository at '
         'github.com/hackjas1/TPoliCyNav.\n\n'
-        'On behalf of Team Kuys — Eduardo, Christian Paul, Nielbert, and Marcel — thank you very much for your time and guidance throughout '
-        'our Generative AI course! We are now open for any questions."'
+        'On behalf of Team Kuys — Eduardo Avenido Jr., Christian Paul G. La Rosa, Nielbert Garcia, Marcel Avergonzado, and myself, '
+        'Ronald M. Barril — thank you very much for your time and guidance throughout our Generative AI course! '
+        'We are now open for any questions."'
     )
     p5_spk.add_run(p5_text).font.size = Pt(11)
 
@@ -487,6 +524,8 @@ def build_script_document():
         ("Video Timing", "Between 5:00 and 8:00 minutes. (Script is designed for ~6:15 at normal speaking pace)."),
         ("Public Access Link", "Verify that https://tpolicynav-production.up.railway.app opens in an Incognito window without login."),
         ("Required Parts Covered", "Covered in order: 1) Problem & Data, 2) Architecture, 3) Walkthrough, 4) 3 Inquiries, 5) Improvements."),
+        ("Speaker Rotation", "1. Eduardo Avenido Jr.  |  2. Nielbert Garcia  |  3. Marcel Avergonzado  |  4. Ronald M. Barril."),
+        ("Creator Credit", "Christian Paul G. La Rosa credited in group roster as lead creator and system architect."),
         ("Negative Question Tested", "Tokyo population inquiry demonstrated clearly to prove 0.50 Cosine guardrail prevents hallucinations."),
         ("Google Drive / YouTube Sharing", "Set sharing to 'Anyone with the link (Viewer)'. Test video playback in an Incognito window."),
         ("GitHub Repository", "Confirm repo https://github.com/hackjas1/TPoliCyNav is Public with README and .env.example."),
