@@ -1,0 +1,9 @@
+sentence-transformers>=2.2.0
+torch
+nltk
+numpy
+pdfplumber
+regex
+pinecone>=5.0.0
+python-dotenv
+huggingface-hub

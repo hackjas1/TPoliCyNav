@@ -1,0 +1,26 @@
+# Environment & Secrets (NEVER COMMIT)
+.env
+.env.local
+*.key
+*.pem
+
+# Python bytecode & cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Editor & OS files
+.DS_Store
+Thumbs.db
+~$*.docx
+~$*.pptx
+.vscode/
+.idea/
+.ipynb_checkpoints/
