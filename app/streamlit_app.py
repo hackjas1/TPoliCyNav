@@ -56,6 +56,22 @@ def get_tpc_logo_b64() -> str:
     return ""
 
 
+@st.cache_data
+def get_tpc_sidebar_logo_b64() -> str:
+    """Generates a high-clarity base64 image specifically for the centered circular sidebar crest."""
+    if TPC_LOGO_PATH and os.path.exists(TPC_LOGO_PATH):
+        try:
+            import io, base64
+            img = Image.open(TPC_LOGO_PATH)
+            img.thumbnail((260, 260))
+            buf = io.BytesIO()
+            img.save(buf, format="PNG")
+            return base64.b64encode(buf.getvalue()).decode()
+        except Exception:
+            return ""
+    return ""
+
+
 @st.cache_resource(show_spinner="🏛️ Initializing TPoliCynav RAG Engine & Vector Cache...")
 def get_rag_engine():
     """Cache the RAG engine instance so it initializes only once across user sessions."""
@@ -204,6 +220,39 @@ CUSTOM_CSS = """
     section[data-testid="stSidebar"] .block-container {
         padding-top: 1.5rem;
         padding-bottom: 2rem;
+    }
+
+    /* Perfectly Centered Sidebar Logo */
+    .sidebar-logo-container {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        width: 100% !important;
+        margin: 0 auto 0.45rem auto !important;
+        text-align: center !important;
+    }
+    .sidebar-logo-img {
+        width: 125px !important;
+        height: 125px !important;
+        object-fit: contain !important;
+        border-radius: 50% !important;
+        background: #FFFFFF !important;
+        padding: 4px !important;
+        border: 2.5px solid #10B981 !important;
+        box-shadow: 0 4px 16px rgba(6, 78, 59, 0.16) !important;
+        display: block !important;
+        margin: 0 auto !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stImage"] {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        text-align: center !important;
+        margin: 0 auto !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stImage"] img {
+        margin: 0 auto !important;
+        display: block !important;
     }
 
     /* Telemetry Diagnostics Card */
@@ -615,6 +664,20 @@ CUSTOM_CSS = """
             padding-left: 0.75rem !important;
             padding-right: 0.75rem !important;
             padding-top: 0.5rem !important;
+        }
+        .sidebar-logo-container {
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            width: 100% !important;
+            margin: 0 auto 0.35rem auto !important;
+            text-align: center !important;
+        }
+        .sidebar-logo-img {
+            width: 110px !important;
+            height: 110px !important;
+            margin: 0 auto !important;
+            display: block !important;
         }
 
         /* Ultra-Sleek Mobile Masthead Header Bar (~44px tall) */
@@ -1158,16 +1221,35 @@ def run_app():
     # SIDEBAR: INSTITUTIONAL BRANDING & TELEMETRY
     # -------------------------------------------------------------------------
     with st.sidebar:
-        # Centered Logo Card
-        col_logo_left, col_logo_center, col_logo_right = st.columns([1, 4, 1])
-        with col_logo_center:
-            if TPC_LOGO_PATH and os.path.exists(TPC_LOGO_PATH):
-                st.image(TPC_LOGO_PATH, width=150)
-            else:
-                st.image(
-                    "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Seal_of_Bohol.svg/200px-Seal_of_Bohol.svg.png",
-                    width=90
-                )
+        # 100% Centered Official Logo Crest
+        sidebar_logo_b64 = get_tpc_sidebar_logo_b64()
+        if sidebar_logo_b64:
+            st.markdown(
+                f"""
+                <div class="sidebar-logo-container">
+                    <img src="data:image/png;base64,{sidebar_logo_b64}" class="sidebar-logo-img" alt="TPC Official Logo" />
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+        elif TPC_LOGO_PATH and os.path.exists(TPC_LOGO_PATH):
+            st.markdown(
+                """
+                <div class="sidebar-logo-container">
+                """,
+                unsafe_allow_html=True
+            )
+            st.image(TPC_LOGO_PATH, width=125)
+            st.markdown("</div>", unsafe_allow_html=True)
+        else:
+            st.markdown(
+                """
+                <div class="sidebar-logo-container">
+                    <span style="font-size: 3.5rem;">🏛️</span>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
         
         st.markdown(
             "<div style='text-align: center; margin-top: 0.25rem;'>"
