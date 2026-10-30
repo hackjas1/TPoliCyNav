@@ -40,6 +40,22 @@ def get_tpc_logo_path():
 TPC_LOGO_PATH = get_tpc_logo_path()
 
 
+@st.cache_data
+def get_tpc_logo_b64() -> str:
+    """Generates an optimized lightweight base64 thumbnail for inline header rendering."""
+    if TPC_LOGO_PATH and os.path.exists(TPC_LOGO_PATH):
+        try:
+            import io, base64
+            img = Image.open(TPC_LOGO_PATH)
+            img.thumbnail((120, 120))
+            buf = io.BytesIO()
+            img.save(buf, format="PNG")
+            return base64.b64encode(buf.getvalue()).decode()
+        except Exception:
+            return ""
+    return ""
+
+
 @st.cache_resource(show_spinner="🏛️ Initializing TPoliCynav RAG Engine & Vector Cache...")
 def get_rag_engine():
     """Cache the RAG engine instance so it initializes only once across user sessions."""
@@ -61,6 +77,31 @@ CUSTOM_CSS = """
     /* Overall page background */
     .stApp {
         background-color: #F4FBF7;
+    }
+
+    /* Eliminate massive top void & move content flush to the header side */
+    header[data-testid="stHeader"] {
+        background-color: transparent !important;
+        height: 1rem !important;
+        min-height: 1rem !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        z-index: 99 !important;
+    }
+    div[data-testid="stToolbar"] {
+        top: 0.15rem !important;
+        right: 0.5rem !important;
+    }
+    div[data-testid="stAppViewContainer"] section.main .block-container {
+        padding-top: 0.35rem !important;
+        padding-bottom: 7.5rem !important;
+        padding-left: 1.25rem !important;
+        padding-right: 1.25rem !important;
+        max-width: 1080px !important;
+    }
+    section[data-testid="stSidebar"] .block-container {
+        padding-top: 0.75rem !important;
+        padding-bottom: 2rem !important;
     }
 
     /* Header Banner Container */
@@ -381,18 +422,19 @@ CUSTOM_CSS = """
         box-shadow: 0 3px 12px rgba(6, 78, 59, 0.05) !important;
     }
 
-    /* Slim Compact Header Bar (Picture 2 style) */
+    /* Slim Compact Header Bar placed flush at the top header side */
     .tpc-slim-card {
         background: linear-gradient(135deg, #064E3B 0%, #065F46 65%, #059669 100%);
-        padding: 0.85rem 1.4rem;
+        padding: 0.75rem 1.25rem;
         border-radius: 14px;
         color: #FFFFFF;
         box-shadow: 0 4px 16px rgba(6, 78, 59, 0.18);
-        margin-bottom: 1.1rem;
+        margin-top: 0.05rem;
+        margin-bottom: 0.75rem;
         border-left: 6px solid #34D399;
     }
     .tpc-slim-eyebrow {
-        font-size: 0.72rem;
+        font-size: 0.70rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.08em;
@@ -400,15 +442,28 @@ CUSTOM_CSS = """
         display: flex;
         align-items: center;
         gap: 0.35rem;
-        margin-bottom: 0.2rem;
+        margin-bottom: 0.15rem;
     }
     .tpc-slim-title {
-        font-size: 1.55rem;
+        font-size: 1.45rem;
         font-weight: 800;
         margin: 0;
         color: #FFFFFF;
         letter-spacing: -0.025em;
         line-height: 1.2;
+    }
+
+    /* Latest Resolution Focus Banner */
+    .latest-focus-banner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: linear-gradient(90deg, #ECFDF5 0%, #F0FDF4 100%);
+        border: 1.5px solid #10B981;
+        border-radius: 12px;
+        padding: 0.55rem 1rem;
+        margin-bottom: 0.75rem;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.12);
     }
 
     /* Streamlit Tabs Styling */
@@ -507,6 +562,99 @@ def generate_transcript_text(messages: list) -> str:
     lines.append("For official academic credentials or certifications, visit the TPC Registrar.")
     lines.append("=" * 72)
     return "\n".join(lines)
+
+
+# =============================================================================
+# REUSABLE ASSISTANT DETAILS RENDERER
+# =============================================================================
+def render_assistant_details(msg: dict, msg_idx: int, is_latest: bool = False):
+    """Renders the verification strip, chunks explorer, feedback, and follow-ups."""
+    sources = msg.get("sources", [])
+    confidence = msg.get("confidence", 0.0)
+    latency_ms = msg.get("latency_ms", 0)
+
+    # Color-code confidence badge
+    if confidence >= 0.80:
+        conf_class = "verif-emerald"
+        conf_label = f"🟢 High Match ({confidence*100:.1f}%)"
+    elif confidence >= 0.60:
+        conf_class = "verif-light"
+        conf_label = f"🟢 Grounded Match ({confidence*100:.1f}%)"
+    elif confidence >= 0.50:
+        conf_class = "verif-amber"
+        conf_label = f"🟡 Moderate Match ({confidence*100:.1f}%)"
+    else:
+        conf_class = "verif-amber"
+        conf_label = "⚪ Out-of-Scope Refusal"
+
+    # Verification and citation tags
+    sources_html = ""
+    for s in sources:
+        sources_html += f"<span class='citation-tag'>📄 {s}</span> "
+
+    latency_str = f"⚡ {latency_ms}ms" if latency_ms > 0 else "⚡ Instant Cache"
+
+    st.markdown(f"""
+    <div class="verification-strip">
+        <span class="verif-badge {conf_class}">{conf_label}</span>
+        <span style="color: #64748B; font-size: 0.76rem; font-weight: 600;">{latency_str}</span>
+        <span style="color: #94A3B8;">|</span>
+        <span style="color: #065F46; font-size: 0.76rem; font-weight: 700;">Sources:</span>
+        {sources_html if sources_html else "<span class='citation-tag'>TPC Institutional Policy Database</span>"}
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Expandable Chunk Passages Explorer
+    chunks = msg.get("chunks", [])
+    if chunks:
+        with st.expander(f"🔍 Inspect Retrieved Policy Excerpts & Mathematical Scores ({len(chunks)})"):
+            for idx, chunk in enumerate(chunks, 1):
+                score_pct = chunk.get("score", 0.0) * 100
+                source_title = chunk.get("source", "TPC Policy Record")
+                st.markdown(
+                    f"<div style='background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 0.6rem 0.8rem; margin-bottom: 0.5rem;'>"
+                    f"<div style='display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: #065F46;'>"
+                    f"<span>[{idx}] {source_title}</span>"
+                    f"<span style='color: #059669; font-family: monospace;'>Cosine Similarity: {score_pct:.1f}%</span>"
+                    f"</div>"
+                    f"<p style='font-size: 0.8rem; color: #475569; margin: 0.35rem 0 0 0; line-height: 1.45;'>{chunk.get('text', '')}</p>"
+                    f"</div>",
+                    unsafe_allow_html=True
+                )
+
+    # Feedback Buttons (Non-initial messages)
+    if msg_idx > 0:
+        fb_col1, fb_col2, fb_col3 = st.columns([1, 1, 8])
+        fb_key = f"fb_{msg_idx}"
+        with fb_col1:
+            if st.button("👍 Helpful", key=f"btn_up_{msg_idx}"):
+                st.session_state.feedback_log[fb_key] = "up"
+                st.toast("Thank you! Feedback recorded for TPC knowledge base optimization.", icon="✅")
+        with fb_col2:
+            if st.button("👎 Clarify", key=f"btn_down_{msg_idx}"):
+                st.session_state.feedback_log[fb_key] = "down"
+                st.toast("Noted. We will continue refining TPC policy grounding.", icon="📝")
+
+    # Dynamic Follow-Up Inquiry Chips (Rendered only on the active latest response)
+    if is_latest and msg_idx > 0:
+        follow_ups = msg.get("follow_ups", [])
+        if not follow_ups and msg_idx > 0:
+            prev_user_query = st.session_state.messages[msg_idx - 1]["content"] if msg_idx - 1 >= 0 else ""
+            follow_ups = get_suggested_follow_ups(prev_user_query, msg["content"])
+
+        if follow_ups:
+            st.markdown("""
+            <div class="followup-label">
+                <span>💡 Recommended Follow-Up Inquiries:</span>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            f_cols = st.columns(len(follow_ups))
+            for f_idx, (f_label, f_query) in enumerate(follow_ups):
+                with f_cols[f_idx]:
+                    if st.button(f_label, key=f"fup_{msg_idx}_{f_idx}"):
+                        st.session_state.pending_prompt = f_query
+                        st.rerun()
 
 
 # =============================================================================
@@ -767,27 +915,181 @@ def run_app():
         """, unsafe_allow_html=True)
 
     # -------------------------------------------------------------------------
-    # MAIN CONTENT AREA: TABS & CHAT CANVAS
+    # FIXED BOTTOM CANVAS: INPUT FIELD & DOCKED FOOTER
     # -------------------------------------------------------------------------
-    tab_chat, tab_about = st.tabs(["💬 Policy Navigator", "ℹ️ About the Chatbot & Architecture"])
-
-    with tab_chat:
-        # Compact Slim Header Bar (Picture 2 style)
+    with st.bottom:
+        user_typed = st.chat_input("💬 Ask about TPC admissions, courses, uniform rules, curfew, scholarships...")
         st.markdown("""
-        <div class="tpc-slim-card">
-            <div class="tpc-slim-eyebrow">
-                <span>🏛️ TALIBON POLYTECHNIC COLLEGE</span>
-                <span>•</span>
-                <span>BOHOL, PHILIPPINES</span>
-                <span>•</span>
-                <span>OFFICIAL AI POLICY PORTAL</span>
-            </div>
-            <h1 class="tpc-slim-title">TPoliCynav: The TPC Policy Navigator</h1>
+        <div style="text-align: center; font-size: 0.74rem; color: #64748B; padding: 0.25rem 0 0.45rem 0; line-height: 1.45;">
+            <strong>Talibon Polytechnic College (TPC)</strong> • Bohol, Philippines &nbsp;|&nbsp; 
+            <em>IS Professional Elective #4 Capstone Project</em> &nbsp;|&nbsp; 
+            <strong style="color: #059669;">Team Kuys</strong><br>
+            <span style="font-size: 0.70rem; color: #94A3B8;">
+                Disclaimer: Synthesized from official TPC documents (Handbook v.04, Ord. 127, RA 10931). For official certifications, consult the Registrar.
+            </span>
         </div>
         """, unsafe_allow_html=True)
 
-        # Empty State Starter Launchpad (Displayed only when dialogue is at initial state)
-        if len(st.session_state.messages) == 1:
+    # Determine Active Prompt: from quick launch buttons, follow-ups, or chat input
+    active_prompt = None
+    if "pending_prompt" in st.session_state and st.session_state.pending_prompt:
+        active_prompt = st.session_state.pop("pending_prompt")
+    elif user_typed:
+        active_prompt = user_typed
+
+    # Process Active Query Immediately
+    if active_prompt:
+        with st.spinner("🔍 Navigating TPC institutional records & vector embeddings..."):
+            st.session_state.messages.append({"role": "user", "content": active_prompt})
+            start_query_t = time.time()
+            if engine:
+                try:
+                    response = engine.query(active_prompt)
+                    answer_text = response.get("answer", "No matching institutional record found.")
+                    sources = response.get("sources", [])
+                    confidence = response.get("confidence", 0.0)
+                    chunks = response.get("chunks", [])
+                    engine_used = response.get("engine_used", "LangChain RAG Engine")
+                    latency_ms = response.get("latency_ms", int((time.time() - start_query_t) * 1000))
+                except Exception as query_err:
+                    answer_text = f"⚠️ An error occurred while retrieving policy records: {query_err}\n\nPlease try again."
+                    sources = []
+                    confidence = 0.0
+                    chunks = []
+                    engine_used = "Error Fallback"
+                    latency_ms = int((time.time() - start_query_t) * 1000)
+            else:
+                answer_text = "⚠️ RAG Engine is not currently initialized."
+                sources = []
+                confidence = 0.0
+                chunks = []
+                engine_used = "System"
+                latency_ms = 0
+
+            follow_ups = get_suggested_follow_ups(active_prompt, answer_text)
+
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": answer_text,
+                "sources": sources,
+                "confidence": confidence,
+                "chunks": chunks,
+                "engine": engine_used,
+                "latency_ms": latency_ms,
+                "follow_ups": follow_ups
+            })
+
+    # -------------------------------------------------------------------------
+    # MASTER TOP HEADER BAR (Picture 2 style with TPC Logo on upper left)
+    # -------------------------------------------------------------------------
+    logo_b64 = get_tpc_logo_b64()
+    if logo_b64:
+        logo_tag = f'<img src="data:image/png;base64,{logo_b64}" style="width: 50px; height: 50px; object-fit: contain; border-radius: 10px; background: rgba(255,255,255,0.95); padding: 3px; box-shadow: 0 2px 8px rgba(0,0,0,0.18);" alt="TPC Official Seal" />'
+    else:
+        logo_tag = '<span style="font-size: 2.1rem;">🏛️</span>'
+
+    st.markdown(f"""
+    <div class="tpc-slim-card">
+        <div style="display: flex; align-items: center; gap: 0.95rem;">
+            {logo_tag}
+            <div style="flex: 1;">
+                <div class="tpc-slim-eyebrow">
+                    <span>🏛️ TALIBON POLYTECHNIC COLLEGE</span>
+                    <span>•</span>
+                    <span>BOHOL, PHILIPPINES</span>
+                    <span>•</span>
+                    <span>OFFICIAL AI POLICY PORTAL</span>
+                </div>
+                <h1 class="tpc-slim-title">TPoliCynav: The TPC Policy Navigator</h1>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # -------------------------------------------------------------------------
+    # MAIN CONTENT TABS
+    # -------------------------------------------------------------------------
+    tab_chat, tab_about = st.tabs(["💬 Policy Navigator", "ℹ️ About the Chatbot & Architecture"])
+
+    assistant_avatar = TPC_LOGO_PATH if (TPC_LOGO_PATH and os.path.exists(TPC_LOGO_PATH)) else "🏛️"
+
+    with tab_chat:
+        # CASE A: Active dialogue session with student inquiries
+        if len(st.session_state.messages) > 1:
+            latest_assistant_idx = len(st.session_state.messages) - 1
+            latest_user_idx = latest_assistant_idx - 1
+            latest_user = st.session_state.messages[latest_user_idx]
+            latest_assistant = st.session_state.messages[latest_assistant_idx]
+
+            # 1. High-Focus Banner for the Latest Answer
+            st.markdown("""
+            <div class="latest-focus-banner">
+                <div style="display: flex; align-items: center; gap: 0.55rem;">
+                    <span style="background: #064E3B; color: #FFFFFF; font-size: 0.72rem; font-weight: 800; padding: 0.22rem 0.65rem; border-radius: 9999px; letter-spacing: 0.05em;">
+                        📌 LATEST POLICY RESOLUTION
+                    </span>
+                    <span style="color: #065F46; font-size: 0.84rem; font-weight: 700;">Direct Answer to Your Most Recent Inquiry</span>
+                </div>
+                <span style="color: #059669; font-size: 0.76rem; font-weight: 600;">⚡ Instant Focus</span>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # 2. Render latest user question
+            with st.chat_message("user", avatar="🎓"):
+                st.markdown(f"**Inquiry:** {latest_user['content']}")
+
+            # 3. Render latest assistant answer (with verification strip, citations, chunks, feedback, follow-ups)
+            with st.chat_message("assistant", avatar=assistant_avatar):
+                st.markdown(latest_assistant["content"])
+                render_assistant_details(latest_assistant, latest_assistant_idx, is_latest=True)
+
+            # 4. Earlier Questions in this Session (Collapsible Expander)
+            if len(st.session_state.messages) > 3:
+                earlier_turns_count = (len(st.session_state.messages) - 1) // 2 - 1
+                st.markdown("<br>", unsafe_allow_html=True)
+                with st.expander(f"📜 Earlier Inquiries in this Session ({earlier_turns_count})", expanded=False):
+                    for u_idx in range(latest_user_idx - 2, 0, -2):
+                        a_idx = u_idx + 1
+                        u_msg = st.session_state.messages[u_idx]
+                        a_msg = st.session_state.messages[a_idx]
+                        
+                        with st.chat_message("user", avatar="🎓"):
+                            st.markdown(f"**Previous Inquiry:** {u_msg['content']}")
+                        with st.chat_message("assistant", avatar=assistant_avatar):
+                            st.markdown(a_msg["content"])
+                            render_assistant_details(a_msg, a_idx, is_latest=False)
+                        st.markdown("---")
+
+            # 5. Welcome Guide & Quick Launchpad (Collapsible Expander in active session)
+            st.markdown("<br>", unsafe_allow_html=True)
+            with st.expander("👋 College Welcome Guide & Quick Launch Topics", expanded=False):
+                with st.chat_message("assistant", avatar=assistant_avatar):
+                    st.markdown(st.session_state.messages[0]["content"])
+                    render_assistant_details(st.session_state.messages[0], 0, is_latest=False)
+                
+                st.markdown("<br><strong>🚀 Quick Launchpad Prompts:</strong>", unsafe_allow_html=True)
+                q_c1, q_c2 = st.columns(2)
+                with q_c1:
+                    if st.button("🎓 Degree Programs Offered", key="arch_programs"):
+                        st.session_state.pending_prompt = "What courses and undergraduate degree programs are officially offered at TPC?"
+                        st.rerun()
+                    if st.button("👔 Examination Dress Code", key="arch_dress"):
+                        st.session_state.pending_prompt = "Are ripped jeans, shorts, or slippers allowed during the TPC entrance exam?"
+                        st.rerun()
+                with q_c2:
+                    if st.button("🏠 Boarding House Curfew", key="arch_curfew"):
+                        st.session_state.pending_prompt = "What are the curfew hours for boarding houses under Talibon Municipal Ordinance 127?"
+                        st.rerun()
+                    if st.button("💰 GSIS STEM Scholarship GWA", key="arch_scholarship"):
+                        st.session_state.pending_prompt = "What is the minimum GWA required to qualify for the GSIS STEM subsidy?"
+                        st.rerun()
+
+        # CASE B: Fresh session (initial greeting)
+        else:
+            with st.chat_message("assistant", avatar=assistant_avatar):
+                st.markdown(st.session_state.messages[0]["content"])
+                render_assistant_details(st.session_state.messages[0], 0, is_latest=False)
+
             st.markdown("""
             <div class="starter-header">
                 <span>🚀 Quick Launchpad — Popular Student Inquiries:</span>
@@ -809,110 +1111,6 @@ def run_app():
                 if st.button("💰 What GWA is required for the GSIS STEM scholarship?", key="starter_scholarship"):
                     st.session_state.pending_prompt = "What is the minimum GWA required to qualify for the GSIS STEM subsidy?"
                     st.rerun()
-            
-            st.markdown("<br>", unsafe_allow_html=True)
-
-        # -------------------------------------------------------------------------
-        # RENDER COMPLETE CHAT HISTORY
-        # -------------------------------------------------------------------------
-        for msg_idx, msg in enumerate(st.session_state.messages):
-            is_user = msg["role"] == "user"
-            avatar_icon = "🎓" if is_user else (TPC_LOGO_PATH if (TPC_LOGO_PATH and os.path.exists(TPC_LOGO_PATH)) else "🏛️")
-
-            with st.chat_message(msg["role"], avatar=avatar_icon):
-                st.markdown(msg["content"])
-
-                # Render Verification Strip for Assistant Responses
-                if not is_user:
-                    sources = msg.get("sources", [])
-                    confidence = msg.get("confidence", 0.0)
-                    latency_ms = msg.get("latency_ms", 0)
-                    engine_name = msg.get("engine", "RAG Pipeline")
-
-                    # Color-code confidence badge
-                    if confidence >= 0.80:
-                        conf_class = "verif-emerald"
-                        conf_label = f"🟢 High Match ({confidence*100:.1f}%)"
-                    elif confidence >= 0.60:
-                        conf_class = "verif-light"
-                        conf_label = f"🟢 Grounded Match ({confidence*100:.1f}%)"
-                    elif confidence >= 0.50:
-                        conf_class = "verif-amber"
-                        conf_label = f"🟡 Moderate Match ({confidence*100:.1f}%)"
-                    else:
-                        conf_class = "verif-amber"
-                        conf_label = "⚪ Out-of-Scope Refusal"
-
-                    # Verification and citation badges
-                    sources_html = ""
-                    for s in sources:
-                        sources_html += f"<span class='citation-tag'>📄 {s}</span> "
-
-                    latency_str = f"⚡ {latency_ms}ms" if latency_ms > 0 else "⚡ Instant Cache"
-
-                    st.markdown(f"""
-                    <div class="verification-strip">
-                        <span class="verif-badge {conf_class}">{conf_label}</span>
-                        <span style="color: #64748B; font-size: 0.76rem; font-weight: 600;">{latency_str}</span>
-                        <span style="color: #94A3B8;">|</span>
-                        <span style="color: #065F46; font-size: 0.76rem; font-weight: 700;">Sources:</span>
-                        {sources_html if sources_html else "<span class='citation-tag'>TPC Institutional Policy Database</span>"}
-                    </div>
-                    """, unsafe_allow_html=True)
-
-                    # Expandable Chunk Passages Explorer
-                    chunks = msg.get("chunks", [])
-                    if chunks:
-                        with st.expander(f"🔍 Inspect Retrieved Policy Excerpts & Mathematical Scores ({len(chunks)})"):
-                            for idx, chunk in enumerate(chunks, 1):
-                                score_pct = chunk.get("score", 0.0) * 100
-                                source_title = chunk.get("source", "TPC Policy Record")
-                                chunk_id = chunk.get("chunk_id", f"chunk_{idx}")
-                                st.markdown(
-                                    f"<div style='background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 0.6rem 0.8rem; margin-bottom: 0.5rem;'>"
-                                    f"<div style='display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: #065F46;'>"
-                                    f"<span>[{idx}] {source_title}</span>"
-                                    f"<span style='color: #059669; font-family: monospace;'>Cosine Similarity: {score_pct:.1f}%</span>"
-                                    f"</div>"
-                                    f"<p style='font-size: 0.8rem; color: #475569; margin: 0.35rem 0 0 0; line-height: 1.45;'>{chunk.get('text', '')}</p>"
-                                    f"</div>",
-                                    unsafe_allow_html=True
-                                )
-
-                    # Feedback & Micro-Interactions (Available for non-initial messages)
-                    if msg_idx > 0:
-                        fb_col1, fb_col2, fb_col3 = st.columns([1, 1, 8])
-                        fb_key = f"fb_{msg_idx}"
-                        current_fb = st.session_state.feedback_log.get(fb_key)
-
-                        with fb_col1:
-                            if st.button("👍 Helpful", key=f"btn_up_{msg_idx}"):
-                                st.session_state.feedback_log[fb_key] = "up"
-                                st.toast("Thank you! Feedback recorded for TPC knowledge base optimization.", icon="✅")
-                        with fb_col2:
-                            if st.button("👎 Clarify", key=f"btn_down_{msg_idx}"):
-                                st.session_state.feedback_log[fb_key] = "down"
-                                st.toast("Noted. We will continue refining TPC policy grounding.", icon="📝")
-
-                        # Suggested Follow-Up Prompt Chips
-                        follow_ups = msg.get("follow_ups", [])
-                        if not follow_ups and msg_idx > 0:
-                            prev_user_query = st.session_state.messages[msg_idx - 1]["content"] if msg_idx - 1 >= 0 else ""
-                            follow_ups = get_suggested_follow_ups(prev_user_query, msg["content"])
-
-                        if follow_ups and msg_idx == len(st.session_state.messages) - 1:
-                            st.markdown("""
-                            <div class="followup-label">
-                                <span>💡 Recommended Follow-Up Inquiries:</span>
-                            </div>
-                            """, unsafe_allow_html=True)
-                            
-                            f_cols = st.columns(len(follow_ups))
-                            for f_idx, (f_label, f_query) in enumerate(follow_ups):
-                                with f_cols[f_idx]:
-                                    if st.button(f_label, key=f"fup_{msg_idx}_{f_idx}"):
-                                        st.session_state.pending_prompt = f_query
-                                        st.rerun()
 
     with tab_about:
         # Full Institutional Hero Card with Badges (Picture 1 style)
@@ -992,84 +1190,6 @@ def run_app():
             <p style="margin: 0; color: #059669; font-weight: 700; font-size: 0.9rem;">Team Kuys: Eduardo Avenido Jr. • Christian Paul Larosa • Nielbert Garcia • Marcel Avergonzado</p>
         </div>
         """, unsafe_allow_html=True)
-
-    # -------------------------------------------------------------------------
-    # FIXED BOTTOM CANVAS: INPUT FIELD & DOCKED FOOTER
-    # -------------------------------------------------------------------------
-    with st.bottom:
-        user_typed = st.chat_input("💬 Ask about TPC admissions, courses, uniform rules, curfew, scholarships...")
-        st.markdown("""
-        <div style="text-align: center; font-size: 0.74rem; color: #64748B; padding: 0.25rem 0 0.45rem 0; line-height: 1.45;">
-            <strong>Talibon Polytechnic College (TPC)</strong> • Bohol, Philippines &nbsp;|&nbsp; 
-            <em>IS Professional Elective #4 Capstone Project</em> &nbsp;|&nbsp; 
-            <strong style="color: #059669;">Team Kuys</strong><br>
-            <span style="font-size: 0.70rem; color: #94A3B8;">
-                Disclaimer: Synthesized from official TPC documents (Handbook v.04, Ord. 127, RA 10931). For official certifications, consult the Registrar.
-            </span>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # Determine Active Prompt: from quick launch buttons, follow-ups, or chat input
-    active_prompt = None
-    if "pending_prompt" in st.session_state and st.session_state.pending_prompt:
-        active_prompt = st.session_state.pop("pending_prompt")
-    elif user_typed:
-        active_prompt = user_typed
-
-    # Process Active Query
-    if active_prompt:
-        # 1. Append and render user message
-        st.session_state.messages.append({"role": "user", "content": active_prompt})
-        with st.chat_message("user", avatar="🎓"):
-            st.markdown(active_prompt)
-
-        # 2. Render assistant response bubble with animated institutional spinner
-        assistant_avatar = TPC_LOGO_PATH if (TPC_LOGO_PATH and os.path.exists(TPC_LOGO_PATH)) else "🏛️"
-        with st.chat_message("assistant", avatar=assistant_avatar):
-            with st.spinner("🔍 Navigating TPC institutional records & vector embeddings..."):
-                start_query_t = time.time()
-                if engine:
-                    try:
-                        response = engine.query(active_prompt)
-                        answer_text = response.get("answer", "No matching institutional record found.")
-                        sources = response.get("sources", [])
-                        confidence = response.get("confidence", 0.0)
-                        chunks = response.get("chunks", [])
-                        engine_used = response.get("engine_used", "LangChain RAG Engine")
-                        latency_ms = response.get("latency_ms", int((time.time() - start_query_t) * 1000))
-                    except Exception as query_err:
-                        answer_text = f"⚠️ An error occurred while retrieving policy records: {query_err}\n\nPlease try again."
-                        sources = []
-                        confidence = 0.0
-                        chunks = []
-                        engine_used = "Error Fallback"
-                        latency_ms = int((time.time() - start_query_t) * 1000)
-                else:
-                    answer_text = "⚠️ RAG Engine is not currently initialized."
-                    sources = []
-                    confidence = 0.0
-                    chunks = []
-                    engine_used = "System"
-                    latency_ms = 0
-
-            # Display generated answer
-            st.markdown(answer_text)
-
-            # Generate dynamic follow-ups
-            follow_ups = get_suggested_follow_ups(active_prompt, answer_text)
-
-        # 3. Append assistant response to session state & rerun to sync clean history
-        st.session_state.messages.append({
-            "role": "assistant",
-            "content": answer_text,
-            "sources": sources,
-            "confidence": confidence,
-            "chunks": chunks,
-            "engine": engine_used,
-            "latency_ms": latency_ms,
-            "follow_ups": follow_ups
-        })
-        st.rerun()
 
 
 if __name__ == "__main__":
