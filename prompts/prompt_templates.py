@@ -34,10 +34,12 @@ INSTITUTIONAL POLICY CONTEXT:
 STUDENT INQUIRY:
 {user_query}
 
-INSTRUCTIONS:
-1. Answer the inquiry based ONLY on the context provided above.
-2. Explicitly cite the document source (e.g., [TPC Student Handbook, Page X] or [Municipal Ordinance No. 127]).
-3. If the context does not contain the answer, politely state that you do not have that information and direct the student to the appropriate office.
+CRITICAL ANTI-HALLUCINATION & GROUNDING DIRECTIVES:
+1. Base your answer EXCLUSIVELY on the explicit facts provided in the INSTITUTIONAL POLICY CONTEXT above.
+2. Do NOT use outside knowledge, pre-trained general facts, assumptions, or speculation.
+3. If the provided context does NOT contain the specific facts needed to answer the inquiry, or if the inquiry is unmentioned, you MUST politely refuse and state:
+   "I cannot find specific information regarding that inquiry in the official Talibon Polytechnic College (TPC) institutional policies and guidelines. Please consult the **TPC Registrar's Office** or the **Office of Student Affairs and Services (OSAS)** for official assistance."
+4. Explicitly cite the document source (e.g., [TPC Student Handbook, Part X] or [Talibon Municipal Ordinance No. 127, Section Y]).
 
 ANSWER:"""
 
@@ -53,6 +55,11 @@ FEW_SHOT_EXAMPLES = [
         "query": "What is the curfew for boarding houses near TPC?",
         "context": "[Source: municipal_ordinance_127]\nSECTION 6. CURFEW HOURS AND LOGBOOK MONITORING\n1. Mandatory Curfew: A standard curfew of 10:00 PM is hereby enforced for all student residents from Sunday through Thursday, and 11:00 PM on Friday and Saturday.",
         "answer": "Under **Talibon Municipal Ordinance No. 127 (Section 6)**, the mandatory curfew for students in boarding houses and dormitories near TPC is:\n- **10:00 PM** from Sunday through Thursday\n- **11:00 PM** on Friday and Saturday\n\nExceptions apply only when academic activities are certified in writing by the TPC Administration."
+    },
+    {
+        "query": "Can I bring my pet dog to class?",
+        "context": "[Source: tpc_student_handbook]\nCAMPUS GROUNDS AND PREMISES SAFETY\nStudents are expected to respect college property, maintain cleanliness, and avoid disruptions to academic proceedings.",
+        "answer": "I cannot find specific information regarding a pet policy in the official TPC Student Handbook or college guidelines. Please consult the **Office of Student Affairs and Services (OSAS)** or the **Dean's Office** for official clarification."
     }
 ]
 

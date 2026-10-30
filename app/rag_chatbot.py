@@ -28,6 +28,12 @@ from pinecone import Pinecone
 from huggingface_hub import InferenceClient
 
 from prompts.prompt_templates import format_rag_prompt
+from app.scope_guard import (
+    check_conversational_chitchat,
+    is_explicitly_out_of_scope,
+    get_institutional_refusal_message,
+    verify_lexical_alignment
+)
 
 # Force UTF-8 on Windows
 sys.stdout.reconfigure(encoding='utf-8')
@@ -275,23 +281,47 @@ class TPoliCynavBot:
         """
         Synthesize concise, grounded response using Generative LLM with automatic offline fallback.
         """
-        max_similarity = max([c["score"] for c in retrieved_chunks]) if retrieved_chunks else 0.0
-
-        # Strict scope containment filter: refuse off-topic questions
-        if max_similarity < 0.50:
+        # Step 0: Check conversational chitchat
+        chitchat = check_conversational_chitchat(user_query)
+        if chitchat:
             return {
-                "answer": (
-                    "I cannot find specific information regarding your inquiry in the official "
-                    "Talibon Polytechnic College (TPC) policies and guidelines.\n\n"
-                    "Please consult the **TPC Registrar's Office** or the **Office of Student Affairs and Services (OSAS)** "
-                    "for official guidance regarding off-policy matters."
-                ),
-                "sources": [],
-                "confidence": max_similarity,
-                "model_used": "Scope Containment Guardrail"
+                "answer": chitchat,
+                "sources": ["Talibon Polytechnic College"],
+                "confidence": 1.0,
+                "model_used": "Institutional Welcome & Identity Handler"
             }
 
-        # 1. Try Generative LLM via Hugging Face Inference API if online
+        # Step 1: Check explicit out-of-scope intent
+        is_oos, oos_reason = is_explicitly_out_of_scope(user_query)
+        if is_oos:
+            return {
+                "answer": get_institutional_refusal_message(oos_reason),
+                "sources": [],
+                "confidence": 0.0,
+                "model_used": f"Scope Guardrail: {oos_reason}"
+            }
+
+        max_similarity = max([c["score"] for c in retrieved_chunks]) if retrieved_chunks else 0.0
+
+        # Step 2: Strict scope containment filter: refuse if score < 0.60
+        if max_similarity < 0.60:
+            return {
+                "answer": get_institutional_refusal_message("Low Retrieval Confidence (< 0.60)"),
+                "sources": [],
+                "confidence": max_similarity,
+                "model_used": "Scope Containment Guardrail (< 0.60)"
+            }
+
+        # Step 3: Lexical alignment check
+        if not verify_lexical_alignment(user_query, retrieved_chunks):
+            return {
+                "answer": get_institutional_refusal_message("Unindexed Topic / No Lexical Alignment"),
+                "sources": [],
+                "confidence": max_similarity,
+                "model_used": "Anti-Hallucination Guardrail (Lexical Verification Failed)"
+            }
+
+        # Step 4: Try Generative LLM via Hugging Face Inference API if online
         if self.llm_client:
             try:
                 formatted_prompt = format_rag_prompt(user_query, retrieved_chunks)
@@ -302,16 +332,27 @@ class TPoliCynavBot:
                             "content": (
                                 "You are TPoliCynav, the institutional policy assistant for Talibon Polytechnic College. "
                                 "Base your answer strictly on the provided institutional context. "
-                                "Be concise, clear, and always cite official documents."
+                                "Never speculate or invent answers. If the context does not state the answer, politely refuse."
                             )
                         },
                         {"role": "user", "content": formatted_prompt}
                     ],
                     model=LLM_MODEL,
                     max_tokens=400,
-                    temperature=0.1
+                    temperature=0.0
                 )
                 generated_answer = response.choices[0].message.content.strip()
+                if any(phrase in generated_answer.lower() for phrase in [
+                    "cannot find specific information", "not mentioned in the provided",
+                    "not found in the provided context", "does not contain"
+                ]):
+                    return {
+                        "answer": generated_answer,
+                        "sources": [],
+                        "confidence": max_similarity,
+                        "model_used": f"Generative Cloud LLM Refusal ({LLM_MODEL})"
+                    }
+
                 cited = list(dict.fromkeys([c.get("source", "Official TPC Policy") for c in retrieved_chunks]))
 
                 return {
@@ -324,8 +365,16 @@ class TPoliCynavBot:
                 # Fall through to local extractor on API error or rate limit
                 pass
 
-        # 2. Local Semantic Extractive Engine (100% Offline)
+        # Step 5: Local Semantic Extractive Engine (100% Offline)
         answer_text, cited_sources = self.extract_relevant_content(user_query, retrieved_chunks)
+        if not answer_text:
+            return {
+                "answer": get_institutional_refusal_message("No Matching Policy Provision Found"),
+                "sources": [],
+                "confidence": max_similarity,
+                "model_used": "Anti-Hallucination Extractor (Zero Overlap Refusal)"
+            }
+
         model_label = "Precision Policy Extractor (Offline Mode)" if self.mode == "offline" else "Precision Policy Extractor (Local Fallback)"
 
         return {

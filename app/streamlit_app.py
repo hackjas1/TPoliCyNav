@@ -997,18 +997,19 @@ def render_assistant_details(msg: dict, msg_idx: int, is_latest: bool = False):
     latency_ms = msg.get("latency_ms", 0)
 
     # Color-code confidence badge
-    if confidence >= 0.80:
-        conf_class = "verif-emerald"
-        conf_label = f"🟢 High Match ({confidence*100:.1f}%)"
-    elif confidence >= 0.60:
-        conf_class = "verif-light"
-        conf_label = f"🟢 Grounded Match ({confidence*100:.1f}%)"
-    elif confidence >= 0.50:
-        conf_class = "verif-amber"
-        conf_label = f"🟡 Moderate Match ({confidence*100:.1f}%)"
-    else:
+    is_refusal = msg.get("is_refusal", False) or confidence < 0.60
+    if is_refusal:
         conf_class = "verif-amber"
         conf_label = "⚪ Out-of-Scope Refusal"
+    elif confidence >= 0.80:
+        conf_class = "verif-emerald"
+        conf_label = f"🟢 High Match ({confidence*100:.1f}%)"
+    elif confidence >= 0.70:
+        conf_class = "verif-light"
+        conf_label = f"🟢 Grounded Match ({confidence*100:.1f}%)"
+    else:
+        conf_class = "verif-amber"
+        conf_label = f"🟡 Moderate Match ({confidence*100:.1f}%)"
 
     # Verification and citation tags
     sources_html = ""
@@ -1385,6 +1386,7 @@ def run_app():
                     chunks = response.get("chunks", [])
                     engine_used = response.get("engine_used", "LangChain RAG Engine")
                     latency_ms = response.get("latency_ms", int((time.time() - start_query_t) * 1000))
+                    is_refusal = response.get("is_refusal", False)
                 except Exception as query_err:
                     answer_text = f"⚠️ An error occurred while retrieving policy records: {query_err}\n\nPlease try again."
                     sources = []
@@ -1392,6 +1394,7 @@ def run_app():
                     chunks = []
                     engine_used = "Error Fallback"
                     latency_ms = int((time.time() - start_query_t) * 1000)
+                    is_refusal = True
             else:
                 answer_text = "⚠️ RAG Engine is not currently initialized."
                 sources = []
@@ -1399,6 +1402,7 @@ def run_app():
                 chunks = []
                 engine_used = "System"
                 latency_ms = 0
+                is_refusal = True
 
             follow_ups = get_suggested_follow_ups(active_prompt, answer_text)
 
@@ -1410,7 +1414,8 @@ def run_app():
                 "chunks": chunks,
                 "engine": engine_used,
                 "latency_ms": latency_ms,
-                "follow_ups": follow_ups
+                "follow_ups": follow_ups if not is_refusal else [],
+                "is_refusal": is_refusal
             })
 
     # -------------------------------------------------------------------------
@@ -1573,7 +1578,7 @@ def run_app():
                 <span class="pill pill-glow">🌲 Pinecone Serverless</span>
                 <span class="pill pill-glow">🤖 LangChain Orchestrated</span>
                 <span class="pill pill-light">🧠 Dense Embeddings (bge-small)</span>
-                <span class="pill pill-light">🛡️ Cosine Scope Guardrail (0.50)</span>
+                <span class="pill pill-light">🛡️ Multi-Layer Scope Guardrail (0.60)</span>
                 <span class="pill pill-light">⚡ Latency-Optimized</span>
             </div>
         </div>

@@ -42,6 +42,12 @@ load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
 
 from app.memory_manager import ConversationalMemoryManager
 from prompts.prompt_templates import format_rag_prompt, load_system_prompt
+from app.scope_guard import (
+    check_conversational_chitchat,
+    is_explicitly_out_of_scope,
+    get_institutional_refusal_message,
+    verify_lexical_alignment
+)
 
 # Constants & Paths
 PROCESSED_DIR = os.path.join(PROJECT_ROOT, "data", "processed")
@@ -54,7 +60,7 @@ INDEX_NAME = os.getenv("PINECONE_INDEX_NAME", "tpolicynav")
 HF_TOKEN = os.getenv("HF_TOKEN")
 LLM_MODEL = "Qwen/Qwen2.5-72B-Instruct"
 
-CONFIDENCE_THRESHOLD = 0.50
+CONFIDENCE_THRESHOLD = 0.60
 
 SOURCE_DISPLAY_NAMES = {
     "admissions_guidelines": "TPC Admissions Guidelines & Degree Offerings",
@@ -196,16 +202,65 @@ class TPCRagEngine:
 
     def query(self, user_query: str) -> Dict[str, Any]:
         """
-        Executes complete multi-turn RAG pipeline:
-          Query -> Contextualization -> Retrieval -> Guardrails -> Generation -> Memory Update
+        Executes complete multi-turn RAG pipeline with multi-layer scope containment:
+          Chitchat/Intent Check -> Contextualization -> Retrieval -> Threshold & Lexical Guardrails -> Generation -> Memory Update
         """
         start_time = time.time()
         user_query = user_query.strip()
         if not user_query:
             return {"error": "Empty query received"}
 
+        # Step 0a: Conversational chitchat & bot identity check
+        chitchat_answer = check_conversational_chitchat(user_query)
+        if chitchat_answer:
+            elapsed_ms = int((time.time() - start_time) * 1000)
+            self.memory.add_turn(user_query, chitchat_answer, sources=["Talibon Polytechnic College"], is_refusal=False)
+            return {
+                "answer": chitchat_answer,
+                "sources": ["Talibon Polytechnic College"],
+                "confidence": 1.0,
+                "chunks": [],
+                "engine_used": "Institutional Welcome & Identity Handler",
+                "latency_ms": elapsed_ms,
+                "reformulated_query": None,
+                "is_refusal": False
+            }
+
+        # Step 0b: Explicit out-of-scope intent guardrail
+        is_oos, oos_reason = is_explicitly_out_of_scope(user_query)
+        if is_oos:
+            refusal_answer = get_institutional_refusal_message(oos_reason)
+            elapsed_ms = int((time.time() - start_time) * 1000)
+            self.memory.add_turn(user_query, refusal_answer, sources=[], is_refusal=True)
+            return {
+                "answer": refusal_answer,
+                "sources": [],
+                "confidence": 0.0,
+                "chunks": [],
+                "engine_used": f"Scope Guardrail: {oos_reason}",
+                "latency_ms": elapsed_ms,
+                "reformulated_query": None,
+                "is_refusal": True
+            }
+
         # Step 1: Contextualize query using dialogue history
         reformulated_query = self.memory.contextualize_query(user_query)
+        if reformulated_query != user_query:
+            is_ref_oos, ref_oos_reason = is_explicitly_out_of_scope(reformulated_query)
+            if is_ref_oos:
+                refusal_answer = get_institutional_refusal_message(ref_oos_reason)
+                elapsed_ms = int((time.time() - start_time) * 1000)
+                self.memory.add_turn(user_query, refusal_answer, sources=[], is_refusal=True)
+                return {
+                    "answer": refusal_answer,
+                    "sources": [],
+                    "confidence": 0.0,
+                    "chunks": [],
+                    "engine_used": f"Scope Guardrail: {ref_oos_reason}",
+                    "latency_ms": elapsed_ms,
+                    "reformulated_query": reformulated_query,
+                    "is_refusal": True
+                }
 
         # Step 2: Retrieve relevant documents via LangChain Retriever
         docs = self.retriever.get_relevant_documents(reformulated_query)
@@ -213,29 +268,39 @@ class TPCRagEngine:
         # Compute max confidence score
         max_score = max([d.metadata.get("score", 0.0) for d in docs]) if docs else 0.0
 
-        # Step 3: Scope Containment Guardrail (Out-of-Scope refusal)
+        # Step 3a: Cosine Similarity Threshold Guardrail
         if max_score < CONFIDENCE_THRESHOLD:
-            refusal_answer = (
-                "I cannot find specific information regarding that inquiry in the official "
-                "Talibon Polytechnic College (TPC) institutional policies and guidelines.\n\n"
-                "Please consult the **TPC Registrar's Office** or the **Office of Student Affairs and Services (OSAS)** "
-                "for official assistance regarding off-policy or non-institutional inquiries."
-            )
+            refusal_answer = get_institutional_refusal_message("Low Retrieval Confidence / Below Threshold")
             elapsed_ms = int((time.time() - start_time) * 1000)
-            self.memory.add_turn(user_query, refusal_answer, sources=[])
-
+            self.memory.add_turn(user_query, refusal_answer, sources=[], is_refusal=True)
             return {
                 "answer": refusal_answer,
                 "sources": [],
                 "confidence": max_score,
                 "chunks": [],
-                "engine_used": "Scope Containment Guardrail (LangChain Filter)",
+                "engine_used": "Scope Containment Guardrail (Cosine Similarity < 0.60)",
                 "latency_ms": elapsed_ms,
                 "reformulated_query": reformulated_query if reformulated_query != user_query else None,
                 "is_refusal": True
             }
 
-        # Step 4: Synthesize Answer (Cloud LLM or Local Extractor)
+        # Step 3b: Anti-Hallucination Lexical Alignment Guardrail
+        if not verify_lexical_alignment(reformulated_query, docs):
+            refusal_answer = get_institutional_refusal_message("Unindexed Topic / No Lexical Alignment")
+            elapsed_ms = int((time.time() - start_time) * 1000)
+            self.memory.add_turn(user_query, refusal_answer, sources=[], is_refusal=True)
+            return {
+                "answer": refusal_answer,
+                "sources": [],
+                "confidence": max_score,
+                "chunks": [],
+                "engine_used": "Anti-Hallucination Guardrail (Lexical Verification Failed)",
+                "latency_ms": elapsed_ms,
+                "reformulated_query": reformulated_query if reformulated_query != user_query else None,
+                "is_refusal": True
+            }
+
+        # Step 4: Synthesize Answer (Cloud LLM or Local Precision Extractor)
         retrieved_chunks = [
             {"source": d.metadata.get("source", ""), "text": d.page_content, "score": d.metadata.get("score", 0.0)}
             for d in docs
@@ -244,8 +309,9 @@ class TPCRagEngine:
         answer_text = None
         engine_label = None
         cited_sources = []
+        is_refusal = False
 
-        # 4a. Cloud Hugging Face Generation
+        # 4a. Cloud Hugging Face Generation with Zero-Temperature
         if self.hf_client is not None:
             try:
                 prompt_text = format_rag_prompt(reformulated_query, retrieved_chunks)
@@ -254,34 +320,52 @@ class TPCRagEngine:
                         {
                             "role": "system",
                             "content": (
-                                "You are TPoliCynav, the official institutional policy assistant for Talibon Polytechnic College (TPC). "
-                                "Base your answers STRICTLY on the provided institutional context. "
-                                "Be clear, concise, and always cite official documents with section references."
+                                "You are TPoliCynav, the institutional policy assistant for Talibon Polytechnic College (TPC). "
+                                "Base your answers STRICTLY and EXCLUSIVELY on the provided institutional context. "
+                                "Never speculate or invent answers. If the context does not state the answer, politely refuse."
                             )
                         },
                         {"role": "user", "content": prompt_text}
                     ],
                     model=LLM_MODEL,
                     max_tokens=450,
-                    temperature=0.1
+                    temperature=0.0
                 )
-                answer_text = response.choices[0].message.content.strip()
-                engine_label = f"LangChain + Generative Cloud LLM ({LLM_MODEL})"
-                cited_sources = list(dict.fromkeys([
-                    SOURCE_DISPLAY_NAMES.get(c["source"], c["source"]) for c in retrieved_chunks
-                ]))
+                candidate_text = response.choices[0].message.content.strip()
+                if any(phrase in candidate_text.lower() for phrase in [
+                    "cannot find specific information", "not mentioned in the provided",
+                    "not found in the provided context", "does not contain"
+                ]):
+                    answer_text = candidate_text
+                    is_refusal = True
+                    cited_sources = []
+                    engine_label = f"LangChain + Grounded LLM Refusal ({LLM_MODEL})"
+                else:
+                    answer_text = candidate_text
+                    engine_label = f"LangChain + Generative Cloud LLM ({LLM_MODEL})"
+                    cited_sources = list(dict.fromkeys([
+                        SOURCE_DISPLAY_NAMES.get(c["source"], c["source"]) for c in retrieved_chunks
+                    ]))
             except Exception:
                 answer_text = None  # Fall through to offline extractor
 
         # 4b. Local Precision Extractor Fallback
         if answer_text is None:
-            answer_text, cited_sources = self._extract_offline_answer(reformulated_query, docs)
-            engine_label = "LangChain + Precision Policy Extractor (Local Fallback)"
+            extracted_ans, extracted_sources = self._extract_offline_answer(reformulated_query, docs)
+            if extracted_ans:
+                answer_text = extracted_ans
+                cited_sources = extracted_sources
+                engine_label = "LangChain + Precision Policy Extractor (Local Fallback)"
+            else:
+                answer_text = get_institutional_refusal_message("No Matching Policy Provision Found")
+                cited_sources = []
+                is_refusal = True
+                engine_label = "Anti-Hallucination Extractor (Zero Overlap Refusal)"
 
         elapsed_ms = int((time.time() - start_time) * 1000)
 
         # Step 5: Update conversational memory
-        self.memory.add_turn(user_query, answer_text, sources=cited_sources)
+        self.memory.add_turn(user_query, answer_text, sources=cited_sources, is_refusal=is_refusal)
 
         return {
             "answer": answer_text,
@@ -295,17 +379,17 @@ class TPCRagEngine:
                     "text": d.page_content[:350] + ("..." if len(d.page_content) > 350 else "")
                 }
                 for d in docs
-            ],
+            ] if not is_refusal else [],
             "engine_used": engine_label,
             "latency_ms": elapsed_ms,
             "reformulated_query": reformulated_query if reformulated_query != user_query else None,
-            "is_refusal": False
+            "is_refusal": is_refusal
         }
 
     def _extract_offline_answer(self, query: str, docs: List[Document]) -> tuple:
-        """Fast, low-memory precision semantic extractor for zero-connectivity and cloud containers."""
+        """Fast, precision anti-hallucination policy extractor."""
         if not docs:
-            return "No matching institutional policy found in TPC records.", []
+            return None, []
 
         # 1. Degree programs query handling
         is_course_query = bool(re.search(r'course|program|degree|offer|bachelor|curriculum|major', query, re.IGNORECASE))
@@ -322,42 +406,48 @@ class TPCRagEngine:
                     )
                     return ans, [SOURCE_DISPLAY_NAMES.get(doc.metadata.get("source", ""), "TPC Student Handbook v.04")]
 
-        # 2. Extract best sentences from top documents using keyword overlap (Zero PyTorch overhead)
-        query_words = set(re.findall(r'\w+', query.lower())) - {
-            "what", "is", "the", "are", "can", "for", "and", "under", "in", "of", "a", "an", "to", "how", "do", "i"
+        # 2. Extract best sentences from top documents using substantive keyword overlap
+        stopwords = {
+            "what", "is", "the", "are", "can", "for", "and", "under", "in", "of", "a", "an", "to", "how", "do", "i",
+            "you", "we", "they", "this", "that", "there", "about", "who", "whom", "where", "when", "why", "which",
+            "tell", "me", "give", "please", "kindly", "does", "have", "has", "had", "would", "should", "could"
         }
+        query_words = set(re.findall(r'[a-zA-Z]{3,}', query.lower())) - stopwords
+
+        if not query_words:
+            return None, []
 
         top_sentences = []
         cited_sources = []
 
         for doc in docs[:2]:
             source_label = SOURCE_DISPLAY_NAMES.get(doc.metadata.get("source", ""), "Official TPC Policy")
-            if source_label not in cited_sources:
-                cited_sources.append(source_label)
-
             splits = re.split(r'(?<=[.!?])\s+|(?<=\d\.)\s+|SECTION\s+\d+\.\s*', doc.page_content)
             scored = []
             for s in splits:
                 s_clean = s.strip()
                 if len(s_clean.split()) >= 4 and not s_clean.startswith("===") and not s_clean.isupper():
-                    s_words = set(re.findall(r'\w+', s_clean.lower()))
+                    s_words = set(re.findall(r'[a-zA-Z]{3,}', s_clean.lower()))
                     overlap = len(query_words & s_words)
-                    scored.append((overlap, s_clean))
+                    # Anti-hallucination requirement: sentence must directly contain query terms
+                    if overlap >= 1:
+                        scored.append((overlap, s_clean))
 
-            scored.sort(key=lambda x: x[0], reverse=True)
-            for _, sent in scored[:2]:
-                cleaned = re.sub(r'^[•\-\d\.\s]+', '', sent).strip()
-                if cleaned and cleaned not in top_sentences:
-                    top_sentences.append(cleaned)
-                if len(top_sentences) >= 3:
-                    break
+            if scored:
+                scored.sort(key=lambda x: x[0], reverse=True)
+                if source_label not in cited_sources:
+                    cited_sources.append(source_label)
+                for _, sent in scored[:2]:
+                    cleaned = re.sub(r'^[•\-\d\.\s]+', '', sent).strip()
+                    if cleaned and cleaned not in top_sentences:
+                        top_sentences.append(cleaned)
+                    if len(top_sentences) >= 3:
+                        break
             if len(top_sentences) >= 3:
                 break
 
         if not top_sentences:
-            top_doc = docs[0]
-            display = SOURCE_DISPLAY_NAMES.get(top_doc.metadata.get("source", ""), "Official TPC Policy")
-            return f"**{display}:**\n\n• " + top_doc.page_content[:300] + "...", [display]
+            return None, []
 
         primary_source = cited_sources[0] if cited_sources else "Official TPC Policy"
         bullets = [f"• {s}" for s in top_sentences]

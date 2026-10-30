@@ -14,16 +14,18 @@ from typing import List, Dict, Any
 
 class ConversationTurn:
     """Represents a single turn in a student-bot dialogue."""
-    def __init__(self, user_query: str, bot_response: str, sources: List[str] = None):
+    def __init__(self, user_query: str, bot_response: str, sources: List[str] = None, is_refusal: bool = False):
         self.user_query = user_query
         self.bot_response = bot_response
         self.sources = sources or []
+        self.is_refusal = is_refusal
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "user_query": self.user_query,
             "bot_response": self.bot_response,
-            "sources": self.sources
+            "sources": self.sources,
+            "is_refusal": self.is_refusal
         }
 
 
@@ -37,9 +39,9 @@ class ConversationalMemoryManager:
         self.max_turns = max_turns
         self.history: List[ConversationTurn] = []
 
-    def add_turn(self, user_query: str, bot_response: str, sources: List[str] = None):
+    def add_turn(self, user_query: str, bot_response: str, sources: List[str] = None, is_refusal: bool = False):
         """Add a completed turn to history, maintaining sliding window."""
-        turn = ConversationTurn(user_query, bot_response, sources)
+        turn = ConversationTurn(user_query, bot_response, sources, is_refusal)
         self.history.append(turn)
         if len(self.history) > self.max_turns:
             self.history.pop(0)
@@ -68,18 +70,24 @@ class ConversationalMemoryManager:
             return current_query
 
         last_turn = self.history[-1]
+        
+        # Never carry forward context from an out-of-scope refusal
+        if last_turn.is_refusal or not last_turn.sources:
+            return current_query
+
         last_query = last_turn.user_query.lower()
         query_lower = current_query.lower()
 
-        # Pronouns or context-dependent signals
+        # Pronouns or context-dependent continuation signals
         follow_up_signals = [
             r'\b(it|this|that|they|them|these|those)\b',
-            r'\b(what about|how about|and what|what if)\b',
-            r'^(can i|is it|are they|why|when|where)\b',
-            r'\b(under it|for that|in that case|with that)\b'
+            r'\b(what about|how about|and what|what if|how regarding)\b',
+            r'\b(under it|for that|in that case|with that|same rule|same policy)\b',
+            r'^(can i|is it|are they|is this)\s+(allowed|prohibited|permitted|required|excused|applicable)\b',
+            r'^(and|also|what of)\s+'
         ]
 
-        is_follow_up = any(re.search(pat, query_lower) for pat in follow_up_signals) or len(query_lower.split()) <= 4
+        is_follow_up = any(re.search(pat, query_lower) for pat in follow_up_signals)
 
         if not is_follow_up:
             return current_query
@@ -105,7 +113,9 @@ class ConversationalMemoryManager:
 
         # General context fallback: append main subject from previous query
         clean_last = re.sub(r'^(what is|what are|tell me about|how can i|can i)\s+', '', last_query).strip(' ?.')
-        return f"{current_query} in relation to {clean_last}"
+        if clean_last:
+            return f"{current_query} in relation to {clean_last}"
+        return current_query
 
     def clear(self):
         """Reset conversation memory."""
