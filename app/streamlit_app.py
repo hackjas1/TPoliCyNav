@@ -301,6 +301,85 @@ CUSTOM_CSS = """
     .tpc-footer strong {
         color: #065F46;
     }
+
+    /* =========================================================================
+       HIGH-VISIBILITY CHATBOX & BOTTOM INPUT STYLING
+       ========================================================================= */
+    div[data-testid="stBottom"] {
+        background: linear-gradient(180deg, rgba(244, 251, 247, 0) 0%, rgba(244, 251, 247, 0.95) 25%, #F4FBF7 100%) !important;
+        padding-top: 0.75rem !important;
+        padding-bottom: 0.5rem !important;
+    }
+
+    /* Main Chat Input Outer Border & Glow */
+    div[data-testid="stChatInput"] {
+        background-color: transparent !important;
+    }
+
+    div[data-testid="stChatInput"] > div {
+        background-color: #FFFFFF !important;
+        border: 2.5px solid #059669 !important;
+        border-radius: 18px !important;
+        box-shadow: 0 10px 30px rgba(6, 78, 59, 0.18), 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+        padding: 0.35rem 0.75rem !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    /* Chat Input Focus State (Glow Ring) */
+    div[data-testid="stChatInput"] > div:focus-within {
+        border-color: #064E3B !important;
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.35), 0 12px 32px rgba(6, 78, 59, 0.25) !important;
+        transform: translateY(-2px) !important;
+    }
+
+    /* Text Area Typography */
+    div[data-testid="stChatInput"] textarea {
+        color: #0F172A !important;
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+        line-height: 1.5 !important;
+        background-color: transparent !important;
+    }
+    div[data-testid="stChatInput"] textarea::placeholder {
+        color: #047857 !important;
+        opacity: 0.85 !important;
+        font-weight: 500 !important;
+    }
+
+    /* High-Visibility Send Button */
+    div[data-testid="stChatInput"] button {
+        background: linear-gradient(135deg, #065F46 0%, #10B981 100%) !important;
+        border: none !important;
+        border-radius: 12px !important;
+        width: 42px !important;
+        height: 42px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 4px 14px rgba(6, 95, 70, 0.35) !important;
+    }
+    div[data-testid="stChatInput"] button:hover {
+        background: linear-gradient(135deg, #064E3B 0%, #059669 100%) !important;
+        transform: scale(1.08) !important;
+        box-shadow: 0 6px 18px rgba(6, 95, 70, 0.45) !important;
+    }
+    div[data-testid="stChatInput"] button svg {
+        fill: #FFFFFF !important;
+        stroke: #FFFFFF !important;
+        width: 20px !important;
+        height: 20px !important;
+    }
+
+    /* Enhanced Chat Message Bubbles */
+    div[data-testid="stChatMessage"] {
+        border-radius: 16px !important;
+        padding: 1.25rem 1.45rem !important;
+        margin-bottom: 1.1rem !important;
+        background-color: #FFFFFF !important;
+        border: 1.5px solid #E2E8F0 !important;
+        box-shadow: 0 3px 12px rgba(6, 78, 59, 0.05) !important;
+    }
 </style>
 """
 
@@ -804,7 +883,7 @@ def run_app():
     # FIXED BOTTOM CANVAS: INPUT FIELD & DOCKED FOOTER
     # -------------------------------------------------------------------------
     with st.bottom:
-        user_typed = st.chat_input("Ask any question regarding TPC admissions, degree programs, uniform rules, curfew...")
+        user_typed = st.chat_input("💬 Ask about TPC admissions, courses, uniform rules, curfew, scholarships...")
         st.markdown("""
         <div style="text-align: center; font-size: 0.74rem; color: #64748B; padding: 0.25rem 0 0.45rem 0; line-height: 1.45;">
             <strong>Talibon Polytechnic College (TPC)</strong> • Bohol, Philippines &nbsp;|&nbsp; 
