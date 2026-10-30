@@ -63,20 +63,29 @@ def get_rag_engine():
 
 
 # =============================================================================
-# HIGH-FIDELITY INSTITUTIONAL CSS THEME (TPC PALETTE)
+# HIGH-FIDELITY RESPONSIVE INSTITUTIONAL CSS THEME (TPC PALETTE)
 # =============================================================================
 CUSTOM_CSS = """
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
     
-    html, body, [class*="css"] {
+    /* Viewport & Universal Box Sizing */
+    html, body {
         font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
         color: #0F172A;
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
+        box-sizing: border-box !important;
+    }
+    *, *:before, *:after {
+        box-sizing: inherit !important;
     }
 
     /* Overall page background */
     .stApp {
         background-color: #F4FBF7;
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
     }
 
     /* Eliminate massive top void & move content flush to the header side */
@@ -92,19 +101,23 @@ CUSTOM_CSS = """
         top: 0.15rem !important;
         right: 0.5rem !important;
     }
+
+    /* Fluid Responsive Page Container */
     div[data-testid="stAppViewContainer"] section.main .block-container {
         padding-top: 0.35rem !important;
         padding-bottom: 7.5rem !important;
         padding-left: 1.25rem !important;
         padding-right: 1.25rem !important;
-        max-width: 1080px !important;
+        width: 100% !important;
+        max-width: 1060px !important;
+        margin: 0 auto !important;
     }
     section[data-testid="stSidebar"] .block-container {
         padding-top: 0.75rem !important;
         padding-bottom: 2rem !important;
     }
 
-    /* Header Banner Container */
+    /* Header Banner Container (About Tab Hero) */
     .tpc-hero-card {
         background: linear-gradient(135deg, #064E3B 0%, #065F46 45%, #059669 85%, #10B981 100%);
         padding: 1.75rem 2.2rem;
@@ -223,18 +236,18 @@ CUSTOM_CSS = """
         font-size: 0.78rem;
     }
 
-    /* Starter Launchpad Cards */
+    /* Starter Launchpad Cards Header */
     .starter-header {
         font-size: 0.95rem;
         font-weight: 700;
         color: #064E3B;
-        margin: 1.25rem 0 0.75rem 0;
+        margin: 1rem 0 0.65rem 0;
         display: flex;
         align-items: center;
         gap: 0.4rem;
     }
 
-    /* Custom Button Styling */
+    /* Touch-Friendly Custom Button Styling (Minimum 42px Touch Target) */
     div.stButton > button {
         background-color: #FFFFFF;
         color: #065F46;
@@ -242,17 +255,21 @@ CUSTOM_CSS = """
         border-radius: 10px;
         font-weight: 600;
         font-size: 0.84rem;
-        padding: 0.55rem 0.9rem;
+        padding: 0.55rem 0.85rem;
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         width: 100%;
         text-align: left;
         box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        min-height: 42px;
+        display: flex;
+        align-items: center;
+        word-break: break-word;
     }
     div.stButton > button:hover {
         background-color: #065F46;
         color: #FFFFFF;
         border-color: #065F46;
-        transform: translateY(-2px);
+        transform: translateY(-1.5px);
         box-shadow: 0 6px 16px rgba(6, 95, 70, 0.2);
     }
     div.stButton > button:active {
@@ -280,7 +297,7 @@ CUSTOM_CSS = """
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 0.6rem;
+        gap: 0.55rem;
         font-size: 0.8rem;
     }
     .verif-badge {
@@ -288,6 +305,7 @@ CUSTOM_CSS = """
         padding: 0.2rem 0.55rem;
         border-radius: 6px;
         font-size: 0.76rem;
+        white-space: nowrap;
     }
     .verif-emerald {
         background-color: #065F46;
@@ -315,6 +333,7 @@ CUSTOM_CSS = """
         border-radius: 6px;
         font-size: 0.76rem;
         font-weight: 600;
+        word-break: break-word;
     }
 
     /* Follow-up Section */
@@ -329,32 +348,26 @@ CUSTOM_CSS = """
         gap: 0.35rem;
     }
 
-    /* Footer text */
-    .tpc-footer {
-        text-align: center;
-        padding: 2.5rem 0 1.25rem 0;
-        color: #64748B;
-        font-size: 0.82rem;
-        line-height: 1.5;
-        border-top: 1px solid #E2E8F0;
-        margin-top: 3rem;
-    }
-    .tpc-footer strong {
-        color: #065F46;
-    }
-
     /* =========================================================================
-       HIGH-VISIBILITY CHATBOX & BOTTOM INPUT STYLING
+       HIGH-VISIBILITY CHATBOX & FIXED BOTTOM CONTAINER
        ========================================================================= */
     div[data-testid="stBottom"] {
-        background: linear-gradient(180deg, rgba(244, 251, 247, 0) 0%, rgba(244, 251, 247, 0.95) 25%, #F4FBF7 100%) !important;
-        padding-top: 0.75rem !important;
-        padding-bottom: 0.5rem !important;
+        background: linear-gradient(180deg, rgba(244, 251, 247, 0) 0%, rgba(244, 251, 247, 0.96) 22%, #F4FBF7 100%) !important;
+        padding-top: 0.65rem !important;
+        padding-bottom: 0.45rem !important;
+        width: 100% !important;
     }
 
-    /* Main Chat Input Outer Border & Glow */
+    div[data-testid="stBottom"] > div {
+        max-width: 1060px !important;
+        margin: 0 auto !important;
+        width: 100% !important;
+    }
+
+    /* Main Chat Input Outer Border & Elevated Elevation */
     div[data-testid="stChatInput"] {
         background-color: transparent !important;
+        width: 100% !important;
     }
 
     div[data-testid="stChatInput"] > div {
@@ -366,19 +379,19 @@ CUSTOM_CSS = """
         transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
 
-    /* Chat Input Focus State (Glow Ring) */
+    /* Chat Input Focus Glow Ring */
     div[data-testid="stChatInput"] > div:focus-within {
         border-color: #064E3B !important;
         box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.35), 0 12px 32px rgba(6, 78, 59, 0.25) !important;
-        transform: translateY(-2px) !important;
+        transform: translateY(-1.5px) !important;
     }
 
-    /* Text Area Typography */
+    /* Text Area Typography (16px to prevent iOS auto-zoom) */
     div[data-testid="stChatInput"] textarea {
         color: #0F172A !important;
-        font-size: 1rem !important;
+        font-size: 16px !important;
         font-weight: 600 !important;
-        line-height: 1.5 !important;
+        line-height: 1.45 !important;
         background-color: transparent !important;
     }
     div[data-testid="stChatInput"] textarea::placeholder {
@@ -392,37 +405,58 @@ CUSTOM_CSS = """
         background: linear-gradient(135deg, #065F46 0%, #10B981 100%) !important;
         border: none !important;
         border-radius: 12px !important;
-        width: 42px !important;
-        height: 42px !important;
+        width: 40px !important;
+        height: 40px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
         box-shadow: 0 4px 14px rgba(6, 95, 70, 0.35) !important;
+        flex-shrink: 0 !important;
     }
     div[data-testid="stChatInput"] button:hover {
         background: linear-gradient(135deg, #064E3B 0%, #059669 100%) !important;
-        transform: scale(1.08) !important;
+        transform: scale(1.06) !important;
         box-shadow: 0 6px 18px rgba(6, 95, 70, 0.45) !important;
     }
     div[data-testid="stChatInput"] button svg {
         fill: #FFFFFF !important;
         stroke: #FFFFFF !important;
-        width: 20px !important;
-        height: 20px !important;
+        width: 18px !important;
+        height: 18px !important;
+    }
+
+    /* Docked Bottom Disclaimer */
+    .docked-disclaimer {
+        text-align: center;
+        font-size: 0.74rem;
+        color: #64748B;
+        padding: 0.25rem 0 0.4rem 0;
+        line-height: 1.45;
+        width: 100%;
+    }
+    .disclaimer-title {
+        color: #475569;
+    }
+    .disclaimer-sub {
+        font-size: 0.70rem;
+        color: #94A3B8;
+        margin-top: 0.15rem;
     }
 
     /* Enhanced Chat Message Bubbles */
     div[data-testid="stChatMessage"] {
         border-radius: 16px !important;
-        padding: 1.25rem 1.45rem !important;
-        margin-bottom: 1.1rem !important;
+        padding: 1.15rem 1.35rem !important;
+        margin-bottom: 1rem !important;
         background-color: #FFFFFF !important;
         border: 1.5px solid #E2E8F0 !important;
         box-shadow: 0 3px 12px rgba(6, 78, 59, 0.05) !important;
+        overflow-wrap: break-word !important;
+        word-break: break-word !important;
     }
 
-    /* Slim Compact Header Bar placed flush at the top header side */
+    /* Slim Masthead Header Bar */
     .tpc-slim-card {
         background: linear-gradient(135deg, #064E3B 0%, #065F46 65%, #059669 100%);
         padding: 0.75rem 1.25rem;
@@ -432,6 +466,16 @@ CUSTOM_CSS = """
         margin-top: 0.05rem;
         margin-bottom: 0.75rem;
         border-left: 6px solid #34D399;
+        width: 100%;
+    }
+    .tpc-slim-inner {
+        display: flex;
+        align-items: center;
+        gap: 0.95rem;
+    }
+    .tpc-slim-text {
+        flex: 1;
+        min-width: 0;
     }
     .tpc-slim-eyebrow {
         font-size: 0.70rem;
@@ -441,8 +485,10 @@ CUSTOM_CSS = """
         color: #A7F3D0;
         display: flex;
         align-items: center;
+        flex-wrap: wrap;
         gap: 0.35rem;
         margin-bottom: 0.15rem;
+        line-height: 1.3;
     }
     .tpc-slim-title {
         font-size: 1.45rem;
@@ -451,6 +497,8 @@ CUSTOM_CSS = """
         color: #FFFFFF;
         letter-spacing: -0.025em;
         line-height: 1.2;
+        overflow-wrap: break-word;
+        word-break: break-word;
     }
 
     /* Latest Resolution Focus Banner */
@@ -464,6 +512,34 @@ CUSTOM_CSS = """
         padding: 0.55rem 1rem;
         margin-bottom: 0.75rem;
         box-shadow: 0 2px 8px rgba(16, 185, 129, 0.12);
+        width: 100%;
+    }
+    .focus-title-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        flex-wrap: wrap;
+    }
+    .focus-tag {
+        background: #064E3B;
+        color: #FFFFFF;
+        font-size: 0.72rem;
+        font-weight: 800;
+        padding: 0.22rem 0.65rem;
+        border-radius: 9999px;
+        letter-spacing: 0.05em;
+        white-space: nowrap;
+    }
+    .focus-desc {
+        color: #065F46;
+        font-size: 0.84rem;
+        font-weight: 700;
+    }
+    .focus-badge {
+        color: #059669;
+        font-size: 0.76rem;
+        font-weight: 600;
+        white-space: nowrap;
     }
 
     /* Streamlit Tabs Styling */
@@ -476,6 +552,227 @@ CUSTOM_CSS = """
     div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
         color: #065F46 !important;
         border-bottom: 3px solid #10B981 !important;
+    }
+
+    /* =========================================================================
+       RESPONSIVE BREAKPOINTS (MOBILE, TABLET, DESKTOP, ULTRAWIDE)
+       ========================================================================= */
+
+    /* 1. Mobile Smartphones (width <= 640px) */
+    @media (max-width: 640px) {
+        div[data-testid="stAppViewContainer"] section.main .block-container {
+            padding-left: 0.65rem !important;
+            padding-right: 0.65rem !important;
+            padding-top: 0.25rem !important;
+            padding-bottom: 6.75rem !important;
+        }
+        section[data-testid="stSidebar"] {
+            width: 86vw !important;
+            max-width: 320px !important;
+        }
+        section[data-testid="stSidebar"] .block-container {
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+            padding-top: 0.5rem !important;
+        }
+
+        /* Slim Header on Mobile */
+        .tpc-slim-card {
+            padding: 0.55rem 0.75rem !important;
+            border-radius: 12px !important;
+            border-left-width: 4px !important;
+            margin-bottom: 0.5rem !important;
+        }
+        .tpc-slim-inner {
+            gap: 0.65rem !important;
+        }
+        .tpc-slim-inner img {
+            width: 40px !important;
+            height: 40px !important;
+            border-radius: 8px !important;
+            padding: 2px !important;
+        }
+        .tpc-slim-eyebrow {
+            font-size: 0.58rem !important;
+            letter-spacing: 0.04em !important;
+            line-height: 1.2 !important;
+            margin-bottom: 0.1rem !important;
+        }
+        .eyebrow-tag {
+            display: none !important;
+        }
+        .eyebrow-sep:last-of-type {
+            display: none !important;
+        }
+        .tpc-slim-title {
+            font-size: 1.12rem !important;
+            line-height: 1.25 !important;
+        }
+
+        /* Latest Resolution Banner on Mobile */
+        .latest-focus-banner {
+            padding: 0.45rem 0.75rem !important;
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 0.35rem !important;
+            border-radius: 10px !important;
+        }
+        .focus-title-wrap {
+            gap: 0.35rem !important;
+        }
+        .focus-tag {
+            font-size: 0.66rem !important;
+            padding: 0.18rem 0.5rem !important;
+        }
+        .focus-desc {
+            font-size: 0.76rem !important;
+            line-height: 1.3 !important;
+        }
+        .focus-badge {
+            display: none !important;
+        }
+
+        /* Tabs on Mobile */
+        div[data-testid="stTabs"] button[role="tab"] {
+            font-size: 0.80rem !important;
+            padding: 0.4rem 0.65rem !important;
+        }
+
+        /* Chat Messages on Mobile */
+        div[data-testid="stChatMessage"] {
+            padding: 0.75rem 0.85rem !important;
+            margin-bottom: 0.65rem !important;
+            border-radius: 12px !important;
+        }
+        div[data-testid="stChatMessage"] p, 
+        div[data-testid="stChatMessage"] li {
+            font-size: 0.88rem !important;
+            line-height: 1.5 !important;
+        }
+
+        /* Verification Strip on Mobile */
+        .verification-strip {
+            padding: 0.45rem 0.65rem !important;
+            gap: 0.35rem !important;
+            font-size: 0.72rem !important;
+            border-radius: 8px !important;
+        }
+        .verif-badge {
+            font-size: 0.68rem !important;
+            padding: 0.15rem 0.45rem !important;
+        }
+        .citation-tag {
+            font-size: 0.68rem !important;
+            padding: 0.12rem 0.4rem !important;
+        }
+
+        /* Responsive Column Stacking for Launchpad & Follow-ups */
+        .launchpad-grid div[data-testid="stHorizontalBlock"],
+        .followup-grid div[data-testid="stHorizontalBlock"],
+        .about-grid div[data-testid="stHorizontalBlock"] {
+            flex-direction: column !important;
+            gap: 0.45rem !important;
+        }
+        .launchpad-grid div[data-testid="stHorizontalBlock"] > div[data-testid="column"],
+        .followup-grid div[data-testid="stHorizontalBlock"] > div[data-testid="column"],
+        .about-grid div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
+            width: 100% !important;
+            min-width: 100% !important;
+            margin-bottom: 0.25rem !important;
+        }
+
+        /* Feedback Buttons Stay Inline on Mobile */
+        .feedback-grid div[data-testid="stHorizontalBlock"] {
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            gap: 0.45rem !important;
+            align-items: center !important;
+        }
+        .feedback-grid div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(1),
+        .feedback-grid div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) {
+            width: auto !important;
+            min-width: 95px !important;
+            flex: 0 0 auto !important;
+        }
+
+        /* Buttons on Mobile */
+        div.stButton > button {
+            font-size: 0.80rem !important;
+            padding: 0.45rem 0.75rem !important;
+            min-height: 40px !important;
+        }
+
+        /* Bottom Chat Input on Mobile */
+        div[data-testid="stBottom"] {
+            padding-top: 0.35rem !important;
+            padding-bottom: 0.25rem !important;
+        }
+        div[data-testid="stChatInput"] > div {
+            border-width: 2px !important;
+            border-radius: 14px !important;
+            padding: 0.25rem 0.5rem !important;
+        }
+        div[data-testid="stChatInput"] button {
+            width: 36px !important;
+            height: 36px !important;
+            border-radius: 10px !important;
+        }
+        .docked-disclaimer {
+            font-size: 0.65rem !important;
+            padding: 0.15rem 0 0.25rem 0 !important;
+            line-height: 1.25 !important;
+        }
+        .disclaimer-sub {
+            font-size: 0.60rem !important;
+            margin-top: 0.1rem !important;
+        }
+
+        /* Hero Card on Mobile */
+        .tpc-hero-card {
+            padding: 1.1rem 1.25rem !important;
+            border-radius: 14px !important;
+            margin-bottom: 1rem !important;
+        }
+        .tpc-hero-title {
+            font-size: 1.35rem !important;
+        }
+        .tpc-hero-subtitle {
+            font-size: 0.85rem !important;
+        }
+        .pill {
+            font-size: 0.70rem !important;
+            padding: 0.22rem 0.55rem !important;
+        }
+    }
+
+    /* 2. Tablet Devices (641px <= width <= 1024px) */
+    @media (min-width: 641px) and (max-width: 1024px) {
+        div[data-testid="stAppViewContainer"] section.main .block-container {
+            padding-left: 1.25rem !important;
+            padding-right: 1.25rem !important;
+            padding-top: 0.35rem !important;
+        }
+        .tpc-slim-card {
+            padding: 0.65rem 1rem !important;
+        }
+        .tpc-slim-title {
+            font-size: 1.30rem !important;
+        }
+        div[data-testid="stChatMessage"] {
+            padding: 0.95rem 1.15rem !important;
+        }
+    }
+
+    /* 3. Ultrawide Monitors (width >= 1441px) */
+    @media (min-width: 1441px) {
+        div[data-testid="stAppViewContainer"] section.main .block-container {
+            max-width: 1080px !important;
+            margin: 0 auto !important;
+        }
+        div[data-testid="stBottom"] > div {
+            max-width: 1080px !important;
+            margin: 0 auto !important;
+        }
     }
 </style>
 """
@@ -624,7 +921,8 @@ def render_assistant_details(msg: dict, msg_idx: int, is_latest: bool = False):
 
     # Feedback Buttons (Non-initial messages)
     if msg_idx > 0:
-        fb_col1, fb_col2, fb_col3 = st.columns([1, 1, 8])
+        st.markdown('<div class="feedback-grid">', unsafe_allow_html=True)
+        fb_col1, fb_col2, fb_col3 = st.columns([1, 1, 6])
         fb_key = f"fb_{msg_idx}"
         with fb_col1:
             if st.button("👍 Helpful", key=f"btn_up_{msg_idx}"):
@@ -634,6 +932,7 @@ def render_assistant_details(msg: dict, msg_idx: int, is_latest: bool = False):
             if st.button("👎 Clarify", key=f"btn_down_{msg_idx}"):
                 st.session_state.feedback_log[fb_key] = "down"
                 st.toast("Noted. We will continue refining TPC policy grounding.", icon="📝")
+        st.markdown('</div>', unsafe_allow_html=True)
 
     # Dynamic Follow-Up Inquiry Chips (Rendered only on the active latest response)
     if is_latest and msg_idx > 0:
@@ -647,6 +946,7 @@ def render_assistant_details(msg: dict, msg_idx: int, is_latest: bool = False):
             <div class="followup-label">
                 <span>💡 Recommended Follow-Up Inquiries:</span>
             </div>
+            <div class="followup-grid">
             """, unsafe_allow_html=True)
             
             f_cols = st.columns(len(follow_ups))
@@ -655,6 +955,7 @@ def render_assistant_details(msg: dict, msg_idx: int, is_latest: bool = False):
                     if st.button(f_label, key=f"fup_{msg_idx}_{f_idx}"):
                         st.session_state.pending_prompt = f_query
                         st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
 
 
 # =============================================================================
@@ -920,13 +1221,15 @@ def run_app():
     with st.bottom:
         user_typed = st.chat_input("💬 Ask about TPC admissions, courses, uniform rules, curfew, scholarships...")
         st.markdown("""
-        <div style="text-align: center; font-size: 0.74rem; color: #64748B; padding: 0.25rem 0 0.45rem 0; line-height: 1.45;">
-            <strong>Talibon Polytechnic College (TPC)</strong> • Bohol, Philippines &nbsp;|&nbsp; 
-            <em>IS Professional Elective #4 Capstone Project</em> &nbsp;|&nbsp; 
-            <strong style="color: #059669;">Team Kuys</strong><br>
-            <span style="font-size: 0.70rem; color: #94A3B8;">
+        <div class="docked-disclaimer">
+            <div class="disclaimer-title">
+                <strong>Talibon Polytechnic College (TPC)</strong> • Bohol, Philippines &nbsp;|&nbsp; 
+                <em>IS Professional Elective #4 Capstone Project</em> &nbsp;|&nbsp; 
+                <strong style="color: #059669;">Team Kuys</strong>
+            </div>
+            <div class="disclaimer-sub">
                 Disclaimer: Synthesized from official TPC documents (Handbook v.04, Ord. 127, RA 10931). For official certifications, consult the Registrar.
-            </span>
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -990,15 +1293,15 @@ def run_app():
 
     st.markdown(f"""
     <div class="tpc-slim-card">
-        <div style="display: flex; align-items: center; gap: 0.95rem;">
+        <div class="tpc-slim-inner">
             {logo_tag}
-            <div style="flex: 1;">
+            <div class="tpc-slim-text">
                 <div class="tpc-slim-eyebrow">
                     <span>🏛️ TALIBON POLYTECHNIC COLLEGE</span>
-                    <span>•</span>
-                    <span>BOHOL, PHILIPPINES</span>
-                    <span>•</span>
-                    <span>OFFICIAL AI POLICY PORTAL</span>
+                    <span class="eyebrow-sep">•</span>
+                    <span class="eyebrow-loc">BOHOL, PHILIPPINES</span>
+                    <span class="eyebrow-sep">•</span>
+                    <span class="eyebrow-tag">OFFICIAL AI POLICY PORTAL</span>
                 </div>
                 <h1 class="tpc-slim-title">TPoliCynav: The TPC Policy Navigator</h1>
             </div>
@@ -1024,13 +1327,13 @@ def run_app():
             # 1. High-Focus Banner for the Latest Answer
             st.markdown("""
             <div class="latest-focus-banner">
-                <div style="display: flex; align-items: center; gap: 0.55rem;">
-                    <span style="background: #064E3B; color: #FFFFFF; font-size: 0.72rem; font-weight: 800; padding: 0.22rem 0.65rem; border-radius: 9999px; letter-spacing: 0.05em;">
+                <div class="focus-title-wrap">
+                    <span class="focus-tag">
                         📌 LATEST POLICY RESOLUTION
                     </span>
-                    <span style="color: #065F46; font-size: 0.84rem; font-weight: 700;">Direct Answer to Your Most Recent Inquiry</span>
+                    <span class="focus-desc">Direct Answer to Your Most Recent Inquiry</span>
                 </div>
-                <span style="color: #059669; font-size: 0.76rem; font-weight: 600;">⚡ Instant Focus</span>
+                <span class="focus-badge">⚡ Instant Focus</span>
             </div>
             """, unsafe_allow_html=True)
 
@@ -1068,6 +1371,7 @@ def run_app():
                     render_assistant_details(st.session_state.messages[0], 0, is_latest=False)
                 
                 st.markdown("<br><strong>🚀 Quick Launchpad Prompts:</strong>", unsafe_allow_html=True)
+                st.markdown('<div class="launchpad-grid">', unsafe_allow_html=True)
                 q_c1, q_c2 = st.columns(2)
                 with q_c1:
                     if st.button("🎓 Degree Programs Offered", key="arch_programs"):
@@ -1083,6 +1387,7 @@ def run_app():
                     if st.button("💰 GSIS STEM Scholarship GWA", key="arch_scholarship"):
                         st.session_state.pending_prompt = "What is the minimum GWA required to qualify for the GSIS STEM subsidy?"
                         st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
 
         # CASE B: Fresh session (initial greeting)
         else:
@@ -1096,6 +1401,7 @@ def run_app():
             </div>
             """, unsafe_allow_html=True)
 
+            st.markdown('<div class="launchpad-grid">', unsafe_allow_html=True)
             sc1, sc2 = st.columns(2)
             with sc1:
                 if st.button("🎓 What courses and degree programs are offered?", key="starter_programs"):
@@ -1111,6 +1417,7 @@ def run_app():
                 if st.button("💰 What GWA is required for the GSIS STEM scholarship?", key="starter_scholarship"):
                     st.session_state.pending_prompt = "What is the minimum GWA required to qualify for the GSIS STEM subsidy?"
                     st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
 
     with tab_about:
         # Full Institutional Hero Card with Badges (Picture 1 style)
@@ -1138,6 +1445,7 @@ def run_app():
         </div>
         """, unsafe_allow_html=True)
 
+        st.markdown('<div class="about-grid">', unsafe_allow_html=True)
         col_a1, col_a2 = st.columns(2)
         with col_a1:
             st.markdown("""
@@ -1162,6 +1470,7 @@ def run_app():
             - **Conversational Memory:** 5-turn sliding window memory buffer with automated contextual coreference resolution.
             - **Deployment Infrastructure:** Containerized with Docker and continuously deployed on Railway Cloud via GitHub CI/CD.
             """)
+        st.markdown('</div>', unsafe_allow_html=True)
 
         st.markdown("---")
         st.markdown("### 📚 **Verified Knowledge Base Corpus (7 Sources)**")
