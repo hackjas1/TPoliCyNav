@@ -20,6 +20,12 @@ import time
 from typing import List, Dict, Any, Optional
 
 import numpy as np
+import torch
+# Restrict PyTorch threads to reduce memory and CPU thrashing on cloud containers
+try:
+    torch.set_num_threads(2)
+except Exception:
+    pass
 from dotenv import load_dotenv
 
 # LangChain Imports
@@ -181,7 +187,7 @@ class TPCRagEngine:
         if self.mode != "offline" and HF_TOKEN and not HF_TOKEN.startswith("your_"):
             try:
                 from huggingface_hub import InferenceClient
-                self.hf_client = InferenceClient(token=HF_TOKEN)
+                self.hf_client = InferenceClient(token=HF_TOKEN, timeout=12)
             except Exception:
                 self.hf_client = None
 

@@ -16,7 +16,8 @@ import streamlit as st
 
 # Setup paths
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(PROJECT_ROOT)
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
 from app.rag_engine import TPCRagEngine
 
@@ -31,14 +32,12 @@ st.set_page_config(
 # Custom CSS styling with TPC Official Colors: Green, Light Green, Dark Green, White
 st.markdown("""
 <style>
-    /* Google Fonts */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     
     html, body, [class*="css"] {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
-    /* Background and main container */
     .stApp {
         background-color: #F0FDF4;
     }
@@ -86,11 +85,6 @@ st.markdown("""
         background-color: #064E3B;
         color: #FFFFFF;
     }
-    .pill-amber {
-        background-color: #FEF3C7;
-        color: #92400E;
-        border: 1px solid #FDE68A;
-    }
 
     /* Sidebar Styling */
     section[data-testid="stSidebar"] {
@@ -99,22 +93,6 @@ st.markdown("""
     }
     section[data-testid="stSidebar"] .block-container {
         padding-top: 2rem;
-    }
-
-    /* Chat Messages */
-    .stChatMessage {
-        border-radius: 14px;
-        padding: 1rem 1.25rem;
-        margin-bottom: 0.85rem;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.03);
-    }
-    div[data-testid="stChatMessage"]:nth-child(even) {
-        background-color: #FFFFFF;
-        border: 1px solid #E2E8F0;
-    }
-    div[data-testid="stChatMessage"]:nth-child(odd) {
-        background-color: #ECFDF5;
-        border: 1px solid #A7F3D0;
     }
 
     /* Quick Prompt Buttons */
@@ -138,14 +116,6 @@ st.markdown("""
         box-shadow: 0 4px 12px rgba(6, 95, 70, 0.2);
     }
 
-    /* Citations expander */
-    .streamlit-expanderHeader {
-        background-color: #FFFFFF !important;
-        border-radius: 8px !important;
-        font-weight: 600 !important;
-        color: #065F46 !important;
-    }
-
     /* Footer text */
     .tpc-footer {
         text-align: center;
@@ -165,8 +135,19 @@ def get_rag_engine():
 
 
 # Initialize RAG Engine
-engine = get_rag_engine()
-system_status = engine.get_system_status()
+try:
+    engine = get_rag_engine()
+    system_status = engine.get_system_status()
+except Exception as init_err:
+    st.error(f"⚠️ Engine Initialization Warning: {init_err}")
+    engine = None
+    system_status = {
+        "status": "Offline Fallback",
+        "vector_backend": "Local NumPy Matrix",
+        "llm_engine": "Local Policy Extractor",
+        "indexed_chunks": 128,
+        "embedding_model": "BAAI/bge-small-en-v1.5"
+    }
 
 # Initialize Session State
 if "messages" not in st.session_state:
@@ -186,7 +167,7 @@ if "messages" not in st.session_state:
             ),
             "sources": [],
             "confidence": 1.0,
-            "engine": "System Greeting"
+            "chunks": []
         }
     ]
 
@@ -204,15 +185,15 @@ with st.sidebar:
 
     # System Status Indicator
     st.markdown("#### ⚙️ **System Diagnostics**")
-    if "Cloud" in system_status["status"]:
+    if "Cloud" in system_status.get("status", ""):
         st.success(f"🟢 **Status:** {system_status['status']}")
     else:
         st.info(f"🔄 **Status:** {system_status['status']}")
 
-    st.write(f"🌲 **Vector Store:** {system_status['vector_backend']}")
-    st.write(f"🤖 **LLM Engine:** {system_status['llm_engine']}")
-    st.write(f"📚 **Indexed Chunks:** `{system_status['indexed_chunks']} chunks`")
-    st.write(f"🎯 **Embedding Model:** `{system_status['embedding_model']}`")
+    st.write(f"🌲 **Vector Store:** {system_status.get('vector_backend', 'Local Cache')}")
+    st.write(f"🤖 **LLM Engine:** {system_status.get('llm_engine', 'Local Extractor')}")
+    st.write(f"📚 **Indexed Chunks:** `{system_status.get('indexed_chunks', 128)} chunks`")
+    st.write(f"🎯 **Embedding Model:** `{system_status.get('embedding_model', 'bge-small-en-v1.5')}`")
     st.markdown("---")
 
     # Quick Inquiry Topic Chips
@@ -266,7 +247,8 @@ with st.sidebar:
     # Session Reset
     if st.button("🗑️ Clear Chat History", type="secondary"):
         st.session_state.messages = [st.session_state.messages[0]]
-        engine.reset_memory()
+        if engine:
+            engine.reset_memory()
         st.rerun()
 
 # -----------------------------------------------------------------------------
@@ -286,26 +268,24 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Render Chat History
-for msg in st.session_state.messages:
+for i, msg in enumerate(st.session_state.messages):
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
         
-        # Display Sources and Confidence if present
+        # Display Sources and Confidence cleanly with native Streamlit caption
         if msg.get("sources"):
             sources_str = ", ".join(msg["sources"])
-            st.markdown(
-                f"<div style='margin-top: 0.5rem; font-size: 0.85rem; color: #047857; font-weight: 600;'>"
-                f"📚 <b>Official Source:</b> {sources_str} &nbsp;|&nbsp; "
-                f"🎯 <b>Match Confidence:</b> {msg.get('confidence', 0.0) * 100:.1f}%</div>",
-                unsafe_allow_html=True
-            )
+            conf = msg.get("confidence", 0.0) * 100
+            st.caption(f"📚 **Official Source:** {sources_str} &nbsp;|&nbsp; 🎯 **Match Confidence:** {conf:.1f}%")
         
         # Display Expandable Chunks
-        if msg.get("chunks"):
-            with st.expander("🔍 View Official Policy Passages & Retrieved Chunks"):
-                for idx, chunk in enumerate(msg["chunks"], 1):
-                    st.markdown(f"**[{idx}] {chunk.get('source', 'TPC Policy')}** *(Match: {chunk.get('score', 0.0) * 100:.1f}%)*")
-                    st.info(chunk.get("text", ""))
+        chunks = msg.get("chunks", [])
+        if chunks:
+            with st.expander(f"🔍 View Policy Passages & Retrieved Excerpts ({len(chunks)})"):
+                for idx, chunk in enumerate(chunks, 1):
+                    score_pct = chunk.get("score", 0.0) * 100
+                    st.markdown(f"**[{idx}] {chunk.get('source', 'TPC Policy')}** *(Match: {score_pct:.1f}%)*")
+                    st.caption(chunk.get("text", ""))
 
 # User Input Handling
 user_input = st.chat_input("Ask a question about TPC policies, admissions, uniforms, or curfew...")
@@ -314,41 +294,33 @@ user_input = st.chat_input("Ask a question about TPC policies, admissions, unifo
 active_query = user_input or selected_query
 
 if active_query:
-    # Append user question to history
+    # 1. Append user question to history
     st.session_state.messages.append({"role": "user", "content": active_query})
-    with st.chat_message("user"):
-        st.markdown(active_query)
 
-    # Process Query with RAG Engine
-    with st.chat_message("assistant"):
-        with st.spinner("🔍 Navigating TPC institutional records..."):
-            response = engine.query(active_query)
+    # 2. Query Engine with Error Handling
+    with st.spinner("🔍 Navigating TPC institutional records..."):
+        if engine:
+            try:
+                response = engine.query(active_query)
+                answer_text = response.get("answer", "No answer found in policy records.")
+                sources = response.get("sources", [])
+                confidence = response.get("confidence", 0.0)
+                chunks = response.get("chunks", [])
+                engine_used = response.get("engine_used", "LangChain RAG")
+            except Exception as query_err:
+                answer_text = f"⚠️ An error occurred while retrieving policy records: {query_err}\n\nPlease try again or rephrase your question."
+                sources = []
+                confidence = 0.0
+                chunks = []
+                engine_used = "Error Fallback"
+        else:
+            answer_text = "⚠️ RAG Engine is not currently initialized. Please verify configuration."
+            sources = []
+            confidence = 0.0
+            chunks = []
+            engine_used = "System"
 
-        answer_text = response.get("answer", "")
-        sources = response.get("sources", [])
-        confidence = response.get("confidence", 0.0)
-        chunks = response.get("chunks", [])
-        engine_used = response.get("engine_used", "LangChain RAG")
-        is_refusal = response.get("is_refusal", False)
-
-        st.markdown(answer_text)
-
-        if sources:
-            sources_str = ", ".join(sources)
-            st.markdown(
-                f"<div style='margin-top: 0.5rem; font-size: 0.85rem; color: #047857; font-weight: 600;'>"
-                f"📚 <b>Official Source:</b> {sources_str} &nbsp;|&nbsp; "
-                f"🎯 <b>Match Confidence:</b> {confidence * 100:.1f}%</div>",
-                unsafe_allow_html=True
-            )
-
-        if chunks:
-            with st.expander("🔍 View Official Policy Passages & Retrieved Chunks"):
-                for idx, chunk in enumerate(chunks, 1):
-                    st.markdown(f"**[{idx}] {chunk.get('source', 'TPC Policy')}** *(Match: {chunk.get('score', 0.0) * 100:.1f}%)*")
-                    st.info(chunk.get("text", ""))
-
-    # Save Assistant Response to Session
+    # 3. Append assistant response to history
     st.session_state.messages.append({
         "role": "assistant",
         "content": answer_text,
@@ -358,6 +330,9 @@ if active_query:
         "engine": engine_used
     })
 
+    # 4. Clean rerun to render the updated thread smoothly
+    st.rerun()
+
 # Footer
 st.markdown("""
 <div class="tpc-footer">
@@ -365,4 +340,3 @@ st.markdown("""
     Team Kuys: Eduardo Avenido Jr. • Christian Paul Larosa • Nielbert Garcia • Marcel Avergonzado
 </div>
 """, unsafe_allow_html=True)
-
