@@ -380,6 +380,48 @@ CUSTOM_CSS = """
         border: 1.5px solid #E2E8F0 !important;
         box-shadow: 0 3px 12px rgba(6, 78, 59, 0.05) !important;
     }
+
+    /* Slim Compact Header Bar (Picture 2 style) */
+    .tpc-slim-card {
+        background: linear-gradient(135deg, #064E3B 0%, #065F46 65%, #059669 100%);
+        padding: 0.85rem 1.4rem;
+        border-radius: 14px;
+        color: #FFFFFF;
+        box-shadow: 0 4px 16px rgba(6, 78, 59, 0.18);
+        margin-bottom: 1.1rem;
+        border-left: 6px solid #34D399;
+    }
+    .tpc-slim-eyebrow {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #A7F3D0;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        margin-bottom: 0.2rem;
+    }
+    .tpc-slim-title {
+        font-size: 1.55rem;
+        font-weight: 800;
+        margin: 0;
+        color: #FFFFFF;
+        letter-spacing: -0.025em;
+        line-height: 1.2;
+    }
+
+    /* Streamlit Tabs Styling */
+    div[data-testid="stTabs"] button[role="tab"] {
+        font-weight: 700 !important;
+        font-size: 0.92rem !important;
+        color: #64748B !important;
+        padding: 0.5rem 1.2rem !important;
+    }
+    div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
+        color: #065F46 !important;
+        border-bottom: 3px solid #10B981 !important;
+    }
 </style>
 """
 
@@ -725,159 +767,231 @@ def run_app():
         """, unsafe_allow_html=True)
 
     # -------------------------------------------------------------------------
-    # MAIN CONTENT AREA: HEADER & CHAT CANVAS
+    # MAIN CONTENT AREA: TABS & CHAT CANVAS
     # -------------------------------------------------------------------------
-    st.markdown("""
-    <div class="tpc-hero-card">
-        <div class="tpc-hero-eyebrow">
-            <span>🏛️ TALIBON POLYTECHNIC COLLEGE</span>
-            <span>•</span>
-            <span>BOHOL, PHILIPPINES</span>
-            <span>•</span>
-            <span>OFFICIAL AI POLICY PORTAL</span>
-        </div>
-        <h1 class="tpc-hero-title">TPoliCynav: The TPC Policy Navigator</h1>
-        <p class="tpc-hero-subtitle">
-            Authoritative, retrieval-grounded conversational agent for student handbooks, 
-            academic retention, uniform standards, boarding house curfews, and financial subsidies.
-        </p>
-        <div class="pill-group">
-            <span class="pill pill-glow">🌲 Pinecone Serverless</span>
-            <span class="pill pill-glow">🤖 LangChain Orchestrated</span>
-            <span class="pill pill-light">🧠 Dense Embeddings (bge-small)</span>
-            <span class="pill pill-light">🛡️ Cosine Scope Guardrail (0.50)</span>
-            <span class="pill pill-light">⚡ Latency-Optimized</span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    tab_chat, tab_about = st.tabs(["💬 Policy Navigator", "ℹ️ About the Chatbot & Architecture"])
 
-    # Empty State Starter Launchpad (Displayed only when dialogue is at initial state)
-    if len(st.session_state.messages) == 1:
+    with tab_chat:
+        # Compact Slim Header Bar (Picture 2 style)
         st.markdown("""
-        <div class="starter-header">
-            <span>🚀 Quick Launchpad — Popular Student Inquiries:</span>
+        <div class="tpc-slim-card">
+            <div class="tpc-slim-eyebrow">
+                <span>🏛️ TALIBON POLYTECHNIC COLLEGE</span>
+                <span>•</span>
+                <span>BOHOL, PHILIPPINES</span>
+                <span>•</span>
+                <span>OFFICIAL AI POLICY PORTAL</span>
+            </div>
+            <h1 class="tpc-slim-title">TPoliCynav: The TPC Policy Navigator</h1>
         </div>
         """, unsafe_allow_html=True)
 
-        sc1, sc2 = st.columns(2)
-        with sc1:
-            if st.button("🎓 What courses and degree programs are offered?", key="starter_programs"):
-                st.session_state.pending_prompt = "What courses and undergraduate degree programs are officially offered at TPC?"
-                st.rerun()
-            if st.button("👔 Can I wear ripped jeans or slippers to the entrance exam?", key="starter_dress"):
-                st.session_state.pending_prompt = "Are ripped jeans, shorts, or slippers allowed during the TPC entrance exam?"
-                st.rerun()
-        with sc2:
-            if st.button("🏠 What are the curfew hours under Ordinance 127?", key="starter_curfew"):
-                st.session_state.pending_prompt = "What are the curfew hours for boarding houses under Talibon Municipal Ordinance 127?"
-                st.rerun()
-            if st.button("💰 What GWA is required for the GSIS STEM scholarship?", key="starter_scholarship"):
-                st.session_state.pending_prompt = "What is the minimum GWA required to qualify for the GSIS STEM subsidy?"
-                st.rerun()
-        
-        st.markdown("<br>", unsafe_allow_html=True)
+        # Empty State Starter Launchpad (Displayed only when dialogue is at initial state)
+        if len(st.session_state.messages) == 1:
+            st.markdown("""
+            <div class="starter-header">
+                <span>🚀 Quick Launchpad — Popular Student Inquiries:</span>
+            </div>
+            """, unsafe_allow_html=True)
 
-    # -------------------------------------------------------------------------
-    # RENDER COMPLETE CHAT HISTORY
-    # -------------------------------------------------------------------------
-    for msg_idx, msg in enumerate(st.session_state.messages):
-        is_user = msg["role"] == "user"
-        avatar_icon = "🎓" if is_user else (TPC_LOGO_PATH if (TPC_LOGO_PATH and os.path.exists(TPC_LOGO_PATH)) else "🏛️")
+            sc1, sc2 = st.columns(2)
+            with sc1:
+                if st.button("🎓 What courses and degree programs are offered?", key="starter_programs"):
+                    st.session_state.pending_prompt = "What courses and undergraduate degree programs are officially offered at TPC?"
+                    st.rerun()
+                if st.button("👔 Can I wear ripped jeans or slippers to the entrance exam?", key="starter_dress"):
+                    st.session_state.pending_prompt = "Are ripped jeans, shorts, or slippers allowed during the TPC entrance exam?"
+                    st.rerun()
+            with sc2:
+                if st.button("🏠 What are the curfew hours under Ordinance 127?", key="starter_curfew"):
+                    st.session_state.pending_prompt = "What are the curfew hours for boarding houses under Talibon Municipal Ordinance 127?"
+                    st.rerun()
+                if st.button("💰 What GWA is required for the GSIS STEM scholarship?", key="starter_scholarship"):
+                    st.session_state.pending_prompt = "What is the minimum GWA required to qualify for the GSIS STEM subsidy?"
+                    st.rerun()
+            
+            st.markdown("<br>", unsafe_allow_html=True)
 
-        with st.chat_message(msg["role"], avatar=avatar_icon):
-            st.markdown(msg["content"])
+        # -------------------------------------------------------------------------
+        # RENDER COMPLETE CHAT HISTORY
+        # -------------------------------------------------------------------------
+        for msg_idx, msg in enumerate(st.session_state.messages):
+            is_user = msg["role"] == "user"
+            avatar_icon = "🎓" if is_user else (TPC_LOGO_PATH if (TPC_LOGO_PATH and os.path.exists(TPC_LOGO_PATH)) else "🏛️")
 
-            # Render Verification Strip for Assistant Responses
-            if not is_user:
-                sources = msg.get("sources", [])
-                confidence = msg.get("confidence", 0.0)
-                latency_ms = msg.get("latency_ms", 0)
-                engine_name = msg.get("engine", "RAG Pipeline")
+            with st.chat_message(msg["role"], avatar=avatar_icon):
+                st.markdown(msg["content"])
 
-                # Color-code confidence badge
-                if confidence >= 0.80:
-                    conf_class = "verif-emerald"
-                    conf_label = f"🟢 High Match ({confidence*100:.1f}%)"
-                elif confidence >= 0.60:
-                    conf_class = "verif-light"
-                    conf_label = f"🟢 Grounded Match ({confidence*100:.1f}%)"
-                elif confidence >= 0.50:
-                    conf_class = "verif-amber"
-                    conf_label = f"🟡 Moderate Match ({confidence*100:.1f}%)"
-                else:
-                    conf_class = "verif-amber"
-                    conf_label = "⚪ Out-of-Scope Refusal"
+                # Render Verification Strip for Assistant Responses
+                if not is_user:
+                    sources = msg.get("sources", [])
+                    confidence = msg.get("confidence", 0.0)
+                    latency_ms = msg.get("latency_ms", 0)
+                    engine_name = msg.get("engine", "RAG Pipeline")
 
-                # Verification and citation badges
-                sources_html = ""
-                for s in sources:
-                    sources_html += f"<span class='citation-tag'>📄 {s}</span> "
+                    # Color-code confidence badge
+                    if confidence >= 0.80:
+                        conf_class = "verif-emerald"
+                        conf_label = f"🟢 High Match ({confidence*100:.1f}%)"
+                    elif confidence >= 0.60:
+                        conf_class = "verif-light"
+                        conf_label = f"🟢 Grounded Match ({confidence*100:.1f}%)"
+                    elif confidence >= 0.50:
+                        conf_class = "verif-amber"
+                        conf_label = f"🟡 Moderate Match ({confidence*100:.1f}%)"
+                    else:
+                        conf_class = "verif-amber"
+                        conf_label = "⚪ Out-of-Scope Refusal"
 
-                latency_str = f"⚡ {latency_ms}ms" if latency_ms > 0 else "⚡ Instant Cache"
+                    # Verification and citation badges
+                    sources_html = ""
+                    for s in sources:
+                        sources_html += f"<span class='citation-tag'>📄 {s}</span> "
 
-                st.markdown(f"""
-                <div class="verification-strip">
-                    <span class="verif-badge {conf_class}">{conf_label}</span>
-                    <span style="color: #64748B; font-size: 0.76rem; font-weight: 600;">{latency_str}</span>
-                    <span style="color: #94A3B8;">|</span>
-                    <span style="color: #065F46; font-size: 0.76rem; font-weight: 700;">Sources:</span>
-                    {sources_html if sources_html else "<span class='citation-tag'>TPC Institutional Policy Database</span>"}
-                </div>
-                """, unsafe_allow_html=True)
+                    latency_str = f"⚡ {latency_ms}ms" if latency_ms > 0 else "⚡ Instant Cache"
 
-                # Expandable Chunk Passages Explorer
-                chunks = msg.get("chunks", [])
-                if chunks:
-                    with st.expander(f"🔍 Inspect Retrieved Policy Excerpts & Mathematical Scores ({len(chunks)})"):
-                        for idx, chunk in enumerate(chunks, 1):
-                            score_pct = chunk.get("score", 0.0) * 100
-                            source_title = chunk.get("source", "TPC Policy Record")
-                            chunk_id = chunk.get("chunk_id", f"chunk_{idx}")
-                            st.markdown(
-                                f"<div style='background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 0.6rem 0.8rem; margin-bottom: 0.5rem;'>"
-                                f"<div style='display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: #065F46;'>"
-                                f"<span>[{idx}] {source_title}</span>"
-                                f"<span style='color: #059669; font-family: monospace;'>Cosine Similarity: {score_pct:.1f}%</span>"
-                                f"</div>"
-                                f"<p style='font-size: 0.8rem; color: #475569; margin: 0.35rem 0 0 0; line-height: 1.45;'>{chunk.get('text', '')}</p>"
-                                f"</div>",
-                                unsafe_allow_html=True
-                            )
+                    st.markdown(f"""
+                    <div class="verification-strip">
+                        <span class="verif-badge {conf_class}">{conf_label}</span>
+                        <span style="color: #64748B; font-size: 0.76rem; font-weight: 600;">{latency_str}</span>
+                        <span style="color: #94A3B8;">|</span>
+                        <span style="color: #065F46; font-size: 0.76rem; font-weight: 700;">Sources:</span>
+                        {sources_html if sources_html else "<span class='citation-tag'>TPC Institutional Policy Database</span>"}
+                    </div>
+                    """, unsafe_allow_html=True)
 
-                # Feedback & Micro-Interactions (Available for non-initial messages)
-                if msg_idx > 0:
-                    fb_col1, fb_col2, fb_col3 = st.columns([1, 1, 8])
-                    fb_key = f"fb_{msg_idx}"
-                    current_fb = st.session_state.feedback_log.get(fb_key)
+                    # Expandable Chunk Passages Explorer
+                    chunks = msg.get("chunks", [])
+                    if chunks:
+                        with st.expander(f"🔍 Inspect Retrieved Policy Excerpts & Mathematical Scores ({len(chunks)})"):
+                            for idx, chunk in enumerate(chunks, 1):
+                                score_pct = chunk.get("score", 0.0) * 100
+                                source_title = chunk.get("source", "TPC Policy Record")
+                                chunk_id = chunk.get("chunk_id", f"chunk_{idx}")
+                                st.markdown(
+                                    f"<div style='background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 0.6rem 0.8rem; margin-bottom: 0.5rem;'>"
+                                    f"<div style='display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: #065F46;'>"
+                                    f"<span>[{idx}] {source_title}</span>"
+                                    f"<span style='color: #059669; font-family: monospace;'>Cosine Similarity: {score_pct:.1f}%</span>"
+                                    f"</div>"
+                                    f"<p style='font-size: 0.8rem; color: #475569; margin: 0.35rem 0 0 0; line-height: 1.45;'>{chunk.get('text', '')}</p>"
+                                    f"</div>",
+                                    unsafe_allow_html=True
+                                )
 
-                    with fb_col1:
-                        if st.button("👍 Helpful", key=f"btn_up_{msg_idx}"):
-                            st.session_state.feedback_log[fb_key] = "up"
-                            st.toast("Thank you! Feedback recorded for TPC knowledge base optimization.", icon="✅")
-                    with fb_col2:
-                        if st.button("👎 Clarify", key=f"btn_down_{msg_idx}"):
-                            st.session_state.feedback_log[fb_key] = "down"
-                            st.toast("Noted. We will continue refining TPC policy grounding.", icon="📝")
+                    # Feedback & Micro-Interactions (Available for non-initial messages)
+                    if msg_idx > 0:
+                        fb_col1, fb_col2, fb_col3 = st.columns([1, 1, 8])
+                        fb_key = f"fb_{msg_idx}"
+                        current_fb = st.session_state.feedback_log.get(fb_key)
 
-                    # Suggested Follow-Up Prompt Chips
-                    follow_ups = msg.get("follow_ups", [])
-                    if not follow_ups and msg_idx > 0:
-                        prev_user_query = st.session_state.messages[msg_idx - 1]["content"] if msg_idx - 1 >= 0 else ""
-                        follow_ups = get_suggested_follow_ups(prev_user_query, msg["content"])
+                        with fb_col1:
+                            if st.button("👍 Helpful", key=f"btn_up_{msg_idx}"):
+                                st.session_state.feedback_log[fb_key] = "up"
+                                st.toast("Thank you! Feedback recorded for TPC knowledge base optimization.", icon="✅")
+                        with fb_col2:
+                            if st.button("👎 Clarify", key=f"btn_down_{msg_idx}"):
+                                st.session_state.feedback_log[fb_key] = "down"
+                                st.toast("Noted. We will continue refining TPC policy grounding.", icon="📝")
 
-                    if follow_ups and msg_idx == len(st.session_state.messages) - 1:
-                        st.markdown("""
-                        <div class="followup-label">
-                            <span>💡 Recommended Follow-Up Inquiries:</span>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-                        f_cols = st.columns(len(follow_ups))
-                        for f_idx, (f_label, f_query) in enumerate(follow_ups):
-                            with f_cols[f_idx]:
-                                if st.button(f_label, key=f"fup_{msg_idx}_{f_idx}"):
-                                    st.session_state.pending_prompt = f_query
-                                    st.rerun()
+                        # Suggested Follow-Up Prompt Chips
+                        follow_ups = msg.get("follow_ups", [])
+                        if not follow_ups and msg_idx > 0:
+                            prev_user_query = st.session_state.messages[msg_idx - 1]["content"] if msg_idx - 1 >= 0 else ""
+                            follow_ups = get_suggested_follow_ups(prev_user_query, msg["content"])
+
+                        if follow_ups and msg_idx == len(st.session_state.messages) - 1:
+                            st.markdown("""
+                            <div class="followup-label">
+                                <span>💡 Recommended Follow-Up Inquiries:</span>
+                            </div>
+                            """, unsafe_allow_html=True)
+                            
+                            f_cols = st.columns(len(follow_ups))
+                            for f_idx, (f_label, f_query) in enumerate(follow_ups):
+                                with f_cols[f_idx]:
+                                    if st.button(f_label, key=f"fup_{msg_idx}_{f_idx}"):
+                                        st.session_state.pending_prompt = f_query
+                                        st.rerun()
+
+    with tab_about:
+        # Full Institutional Hero Card with Badges (Picture 1 style)
+        st.markdown("""
+        <div class="tpc-hero-card">
+            <div class="tpc-hero-eyebrow">
+                <span>🏛️ TALIBON POLYTECHNIC COLLEGE</span>
+                <span>•</span>
+                <span>BOHOL, PHILIPPINES</span>
+                <span>•</span>
+                <span>OFFICIAL AI POLICY PORTAL</span>
+            </div>
+            <h1 class="tpc-hero-title">TPoliCynav: The TPC Policy Navigator</h1>
+            <p class="tpc-hero-subtitle">
+                Authoritative, retrieval-grounded conversational agent for student handbooks, 
+                academic retention, uniform standards, boarding house curfews, and financial subsidies.
+            </p>
+            <div class="pill-group">
+                <span class="pill pill-glow">🌲 Pinecone Serverless</span>
+                <span class="pill pill-glow">🤖 LangChain Orchestrated</span>
+                <span class="pill pill-light">🧠 Dense Embeddings (bge-small)</span>
+                <span class="pill pill-light">🛡️ Cosine Scope Guardrail (0.50)</span>
+                <span class="pill pill-light">⚡ Latency-Optimized</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        col_a1, col_a2 = st.columns(2)
+        with col_a1:
+            st.markdown("""
+            ### 🎯 **Academic Scope & Mission**
+            **TPoliCynav** serves as the authoritative institutional policy assistant for **Talibon Polytechnic College (TPC)** in Bohol, Philippines.
+            
+            By anchoring AI responses directly to verified college administrative records, the system provides zero-hallucination guidance on:
+            - **Official Degree Offerings:** 7 CHED-recognized undergraduate programs (BAEL, BAPoS, BSAgri, BSAIS, BSCrim, BSIS, BECEd).
+            - **Admissions & TPCAT Guidelines:** Requirements, examination etiquette, and transfer credit rules.
+            - **School Uniform Policy:** Type A standards, wash-day guidelines, and prohibited clothing items.
+            - **Talibon Ordinance No. 127:** Boarding house 10:00 PM curfews, landlord sanitary obligations, and fire exit safety.
+            - **Subsidies & Grants:** CHED Free Higher Education (RA 10931) and GSIS STEM monthly stipends.
+            - **Disciplinary Matrix:** Sanction scales and the 500-meter campus alcohol/entertainment prohibition zone.
+            """)
+
+        with col_a2:
+            st.markdown("""
+            ### 🛠️ **Technical Architecture & Guardrails**
+            - **Retrieval Engine:** Custom LangChain Hybrid Retriever syncing Pinecone Serverless (AWS us-east-1) with dual local NumPy dense vector matrices.
+            - **Embedding Model:** `BAAI/bge-small-en-v1.5` (384-dimensional dense vectors, 128 normalized chunks).
+            - **Scope Containment Guardrail:** Cosine confidence cutoff of **0.50**. Off-topic or non-institutional inquiries are safely refused with formal office referrals.
+            - **Conversational Memory:** 5-turn sliding window memory buffer with automated contextual coreference resolution.
+            - **Deployment Infrastructure:** Containerized with Docker and continuously deployed on Railway Cloud via GitHub CI/CD.
+            """)
+
+        st.markdown("---")
+        st.markdown("### 📚 **Verified Knowledge Base Corpus (7 Sources)**")
+        st.markdown("""
+        1. **TPC Student Handbook v.04 (Latest Approved 202-Page Edition)**  
+           *Academics, Grading, Retention Criteria, Disciplinary Matrix, Student Governance*
+        2. **Talibon Municipal Ordinance No. 127**  
+           *Boarding Houses, Safety Standards, Curfew Hours, Sanitation Permits, Penalty Schedules*
+        3. **TPC Uniform & Dress Code Policy Guide**  
+           *General Type A Uniform, Prohibited Attires, Footwear Standards, Grooming*
+        4. **TPC Admissions & TPCAT Guidelines**  
+           *Freshmen Requirements, Examination Day Etiquette, Transferee Sequences*
+        5. **CHED Free Higher Education (Republic Act 10931)**  
+           *LUC Exemption, TES Subsidy Eligibility, Zero Tuition & Mandatory Fee Guarantee*
+        6. **GSIS Subsidy for STEM (GSSP) Guidelines**  
+           *Scholarship Criteria & 90% GWA Maintenance Requirements*
+        7. **PNP-TPC Joint Safety Memorandums**  
+           *Curfew Patrols, 500m Alcohol Exclusion Zone, Nighttime Boarding House Inspections*
+        """)
+
+        st.markdown("---")
+        st.markdown("""
+        <div style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.25rem; text-align: center;">
+            <h4 style="margin: 0; color: #064E3B;">Talibon Polytechnic College • Bohol, Philippines</h4>
+            <p style="margin: 0.35rem 0; color: #64748B; font-size: 0.85rem;">Course Capstone Project for <strong>IS Professional Elective #4 (Generative AI Systems)</strong> • A.Y. 2026–2027</p>
+            <p style="margin: 0; color: #059669; font-weight: 700; font-size: 0.9rem;">Team Kuys: Eduardo Avenido Jr. • Christian Paul Larosa • Nielbert Garcia • Marcel Avergonzado</p>
+        </div>
+        """, unsafe_allow_html=True)
 
     # -------------------------------------------------------------------------
     # FIXED BOTTOM CANVAS: INPUT FIELD & DOCKED FOOTER
