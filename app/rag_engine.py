@@ -90,8 +90,11 @@ class TPCVectorRetriever(BaseRetriever):
         return self._retrieve(query)
 
     def _retrieve(self, query: str) -> List[Document]:
-        """Retrieve top_k documents by cosine similarity."""
-        query_vec = self.encoder.encode(query, normalize_embeddings=True)
+        """Retrieve top_k documents by cosine similarity with minimal memory overhead."""
+        import gc
+        with torch.no_grad():
+            query_vec = self.encoder.encode(query, normalize_embeddings=True)
+        gc.collect()
 
         # 1. Attempt Pinecone Cloud Retrieval
         if self.pinecone_index is not None:
@@ -300,7 +303,11 @@ class TPCRagEngine:
         }
 
     def _extract_offline_answer(self, query: str, docs: List[Document]) -> tuple:
-        """Precision semantic extractor for zero-connectivity environments."""
+        """Fast, low-memory precision semantic extractor for zero-connectivity and cloud containers."""
+        if not docs:
+            return "No matching institutional policy found in TPC records.", []
+
+        # 1. Degree programs query handling
         is_course_query = bool(re.search(r'course|program|degree|offer|bachelor|curriculum|major', query, re.IGNORECASE))
         for doc in docs:
             raw = doc.page_content
@@ -315,55 +322,46 @@ class TPCRagEngine:
                     )
                     return ans, [SOURCE_DISPLAY_NAMES.get(doc.metadata.get("source", ""), "TPC Student Handbook v.04")]
 
-        # Sentence semantic matching
-        candidate_sentences = []
-        for doc in docs:
-            raw = doc.page_content
-            splits = re.split(r'(?<=[.!?])\s+|(?<=\d\.)\s+|SECTION\s+\d+\.\s*', raw)
+        # 2. Extract best sentences from top documents using keyword overlap (Zero PyTorch overhead)
+        query_words = set(re.findall(r'\w+', query.lower())) - {
+            "what", "is", "the", "are", "can", "for", "and", "under", "in", "of", "a", "an", "to", "how", "do", "i"
+        }
+
+        top_sentences = []
+        cited_sources = []
+
+        for doc in docs[:2]:
+            source_label = SOURCE_DISPLAY_NAMES.get(doc.metadata.get("source", ""), "Official TPC Policy")
+            if source_label not in cited_sources:
+                cited_sources.append(source_label)
+
+            splits = re.split(r'(?<=[.!?])\s+|(?<=\d\.)\s+|SECTION\s+\d+\.\s*', doc.page_content)
+            scored = []
             for s in splits:
                 s_clean = s.strip()
                 if len(s_clean.split()) >= 4 and not s_clean.startswith("===") and not s_clean.isupper():
-                    candidate_sentences.append({
-                        "text": s_clean,
-                        "source": doc.metadata.get("source", "")
-                    })
+                    s_words = set(re.findall(r'\w+', s_clean.lower()))
+                    overlap = len(query_words & s_words)
+                    scored.append((overlap, s_clean))
 
-        if not candidate_sentences:
-            top_doc = docs[0]
-            display = SOURCE_DISPLAY_NAMES.get(top_doc.metadata.get("source", ""), "Official TPC Policy")
-            return f"**{display}:**\n\n• " + top_doc.page_content[:250] + "...", [display]
-
-        q_vec = self.encoder.encode(query, normalize_embeddings=True)
-        texts = [s["text"] for s in candidate_sentences]
-        s_vecs = self.encoder.encode(texts, normalize_embeddings=True)
-        scores = np.dot(s_vecs, q_vec)
-        ranked = np.argsort(scores)[::-1]
-
-        selected = []
-        seen = set()
-        for idx in ranked:
-            text = candidate_sentences[idx]["text"]
-            score = scores[idx]
-            if score < 0.48:
-                continue
-            key = text.lower()[:35]
-            if key not in seen:
-                seen.add(key)
-                selected.append({
-                    "text": text,
-                    "source": candidate_sentences[idx]["source"]
-                })
-            if len(selected) >= 2:
+            scored.sort(key=lambda x: x[0], reverse=True)
+            for _, sent in scored[:2]:
+                cleaned = re.sub(r'^[•\-\d\.\s]+', '', sent).strip()
+                if cleaned and cleaned not in top_sentences:
+                    top_sentences.append(cleaned)
+                if len(top_sentences) >= 3:
+                    break
+            if len(top_sentences) >= 3:
                 break
 
-        bullets = []
-        for it in selected:
-            cleaned_bullet = re.sub(r'^[•\-\d\.\s]+', '', it['text']).strip()
-            bullets.append(f"• {cleaned_bullet}")
-        cited = list(dict.fromkeys([SOURCE_DISPLAY_NAMES.get(it["source"], it["source"]) for it in selected]))
-        header = cited[0] if cited else SOURCE_DISPLAY_NAMES.get(docs[0].metadata.get("source", ""), "Official TPC Policy")
+        if not top_sentences:
+            top_doc = docs[0]
+            display = SOURCE_DISPLAY_NAMES.get(top_doc.metadata.get("source", ""), "Official TPC Policy")
+            return f"**{display}:**\n\n• " + top_doc.page_content[:300] + "...", [display]
 
-        return f"**{header}:**\n\n" + "\n\n".join(bullets), cited
+        primary_source = cited_sources[0] if cited_sources else "Official TPC Policy"
+        bullets = [f"• {s}" for s in top_sentences]
+        return f"**{primary_source}:**\n\n" + "\n\n".join(bullets), cited_sources
 
     def reset_memory(self):
         """Clear conversation history."""

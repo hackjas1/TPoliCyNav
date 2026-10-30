@@ -294,31 +294,48 @@ user_input = st.chat_input("Ask a question about TPC policies, admissions, unifo
 active_query = user_input or selected_query
 
 if active_query:
-    # 1. Append user question to history
+    # 1. Add and render user question immediately
     st.session_state.messages.append({"role": "user", "content": active_query})
+    with st.chat_message("user"):
+        st.markdown(active_query)
 
-    # 2. Query Engine with Error Handling
-    with st.spinner("🔍 Navigating TPC institutional records..."):
-        if engine:
-            try:
-                response = engine.query(active_query)
-                answer_text = response.get("answer", "No answer found in policy records.")
-                sources = response.get("sources", [])
-                confidence = response.get("confidence", 0.0)
-                chunks = response.get("chunks", [])
-                engine_used = response.get("engine_used", "LangChain RAG")
-            except Exception as query_err:
-                answer_text = f"⚠️ An error occurred while retrieving policy records: {query_err}\n\nPlease try again or rephrase your question."
+    # 2. Render assistant bubble immediately with in-place generation
+    with st.chat_message("assistant"):
+        message_placeholder = st.empty()
+        with st.spinner("🔍 Navigating TPC institutional records..."):
+            if engine:
+                try:
+                    response = engine.query(active_query)
+                    answer_text = response.get("answer", "No answer found in policy records.")
+                    sources = response.get("sources", [])
+                    confidence = response.get("confidence", 0.0)
+                    chunks = response.get("chunks", [])
+                    engine_used = response.get("engine_used", "LangChain RAG")
+                except Exception as query_err:
+                    answer_text = f"⚠️ An error occurred while retrieving policy records: {query_err}\n\nPlease try again."
+                    sources = []
+                    confidence = 0.0
+                    chunks = []
+                    engine_used = "Error Fallback"
+            else:
+                answer_text = "⚠️ RAG Engine is not currently initialized."
                 sources = []
                 confidence = 0.0
                 chunks = []
-                engine_used = "Error Fallback"
-        else:
-            answer_text = "⚠️ RAG Engine is not currently initialized. Please verify configuration."
-            sources = []
-            confidence = 0.0
-            chunks = []
-            engine_used = "System"
+                engine_used = "System"
+
+        # Display answer in-place
+        message_placeholder.markdown(answer_text)
+        if sources:
+            sources_str = ", ".join(sources)
+            conf = confidence * 100
+            st.caption(f"📚 **Official Source:** {sources_str} &nbsp;|&nbsp; 🎯 **Match Confidence:** {conf:.1f}%")
+        if chunks:
+            with st.expander(f"🔍 View Policy Passages & Retrieved Excerpts ({len(chunks)})"):
+                for idx, chunk in enumerate(chunks, 1):
+                    score_pct = chunk.get("score", 0.0) * 100
+                    st.markdown(f"**[{idx}] {chunk.get('source', 'TPC Policy')}** *(Match: {score_pct:.1f}%)*")
+                    st.caption(chunk.get("text", ""))
 
     # 3. Append assistant response to history
     st.session_state.messages.append({
@@ -329,9 +346,6 @@ if active_query:
         "chunks": chunks,
         "engine": engine_used
     })
-
-    # 4. Clean rerun to render the updated thread smoothly
-    st.rerun()
 
 # Footer
 st.markdown("""
