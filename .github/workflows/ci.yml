@@ -28,6 +28,7 @@ jobs:
 
       - name: Syntax & Lint Verification
         run: |
+          python -m py_compile main.py
           python -m py_compile app/rag_engine.py
           python -m py_compile app/streamlit_app.py
           python -m py_compile scripts/ingest_pipeline.py
