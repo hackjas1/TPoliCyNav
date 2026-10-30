@@ -21,10 +21,26 @@ if PROJECT_ROOT not in sys.path:
 
 from app.rag_engine import TPCRagEngine
 
+# Locate TPC Official Logo
+def get_tpc_logo_path():
+    candidates = [
+        os.path.join(PROJECT_ROOT, "logo", "TPC-Logo.png"),
+        os.path.join(PROJECT_ROOT, "logo", "TPC-LOGO.png"),
+        os.path.join(PROJECT_ROOT, "logo", "tpc-logo.png"),
+        os.path.join(PROJECT_ROOT, "TPC-Logo.png"),
+        os.path.join(PROJECT_ROOT, "TPC-LOGO.png")
+    ]
+    for c in candidates:
+        if os.path.exists(c):
+            return c
+    return None
+
+TPC_LOGO_PATH = get_tpc_logo_path()
+
 # Page configuration
 st.set_page_config(
     page_title="TPoliCynav — TPC Policy Navigator",
-    page_icon="🎓",
+    page_icon=TPC_LOGO_PATH if TPC_LOGO_PATH else "🎓",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -175,10 +191,13 @@ if "messages" not in st.session_state:
 # SIDEBAR
 # -----------------------------------------------------------------------------
 with st.sidebar:
-    st.image(
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Seal_of_Bohol.svg/200px-Seal_of_Bohol.svg.png",
-        width=85
-    )
+    if TPC_LOGO_PATH:
+        st.image(TPC_LOGO_PATH, width=140)
+    else:
+        st.image(
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Seal_of_Bohol.svg/200px-Seal_of_Bohol.svg.png",
+            width=85
+        )
     st.markdown("### 🏛️ **TPoliCynav**")
     st.caption("Talibon Polytechnic College Policy Navigator")
     st.markdown("---")
