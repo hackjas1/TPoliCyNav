@@ -435,6 +435,12 @@ CUSTOM_CSS = """
         line-height: 1.45;
         width: 100%;
     }
+    .disclaimer-desktop-only {
+        display: inline;
+    }
+    .disclaimer-mobile-only {
+        display: none;
+    }
     .disclaimer-title {
         color: #475569;
     }
@@ -477,6 +483,20 @@ CUSTOM_CSS = """
         flex: 1;
         min-width: 0;
     }
+    .tpc-header-logo {
+        width: 48px;
+        height: 48px;
+        object-fit: contain;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.95);
+        padding: 3px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+        flex-shrink: 0;
+    }
+    .tpc-header-emoji {
+        font-size: 2.1rem;
+        flex-shrink: 0;
+    }
     .tpc-slim-eyebrow {
         font-size: 0.70rem;
         font-weight: 700;
@@ -499,6 +519,9 @@ CUSTOM_CSS = """
         line-height: 1.2;
         overflow-wrap: break-word;
         word-break: break-word;
+    }
+    .tpc-mobile-sub {
+        display: none;
     }
 
     /* Latest Resolution Focus Banner */
@@ -560,11 +583,29 @@ CUSTOM_CSS = """
 
     /* 1. Mobile Smartphones (width <= 640px) */
     @media (max-width: 640px) {
+        /* Mobile Touch & Scroll Ergonomics */
+        * {
+            -webkit-tap-highlight-color: transparent !important;
+        }
+
+        /* Streamlit Header & Sidebar Toggle on Mobile */
+        header[data-testid="stHeader"] {
+            height: 2.25rem !important;
+            min-height: 2.25rem !important;
+        }
+        button[data-testid="stSidebarCollapseButton"] {
+            background: rgba(255, 255, 255, 0.95) !important;
+            border: 1px solid #10B981 !important;
+            border-radius: 8px !important;
+            color: #064E3B !important;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06) !important;
+        }
+
         div[data-testid="stAppViewContainer"] section.main .block-container {
             padding-left: 0.65rem !important;
             padding-right: 0.65rem !important;
-            padding-top: 0.25rem !important;
-            padding-bottom: 6.75rem !important;
+            padding-top: 0.15rem !important;
+            padding-bottom: 5.25rem !important;
         }
         section[data-testid="stSidebar"] {
             width: 86vw !important;
@@ -576,66 +617,97 @@ CUSTOM_CSS = """
             padding-top: 0.5rem !important;
         }
 
-        /* Slim Header on Mobile */
+        /* Ultra-Sleek Mobile Masthead Header Bar (~44px tall) */
         .tpc-slim-card {
-            padding: 0.55rem 0.75rem !important;
-            border-radius: 12px !important;
-            border-left-width: 4px !important;
-            margin-bottom: 0.5rem !important;
+            padding: 0.35rem 0.65rem !important;
+            border-radius: 10px !important;
+            border-left: 4px solid #34D399 !important;
+            margin-top: 0 !important;
+            margin-bottom: 0.35rem !important;
+            box-shadow: 0 2px 8px rgba(6, 78, 59, 0.14) !important;
         }
         .tpc-slim-inner {
-            gap: 0.65rem !important;
+            gap: 0.55rem !important;
+            align-items: center !important;
         }
-        .tpc-slim-inner img {
-            width: 40px !important;
-            height: 40px !important;
-            border-radius: 8px !important;
-            padding: 2px !important;
+        .tpc-header-logo {
+            width: 32px !important;
+            height: 32px !important;
+            min-width: 32px !important;
+            border-radius: 6px !important;
+            padding: 1.5px !important;
+        }
+        .tpc-header-emoji {
+            font-size: 1.5rem !important;
         }
         .tpc-slim-eyebrow {
-            font-size: 0.58rem !important;
-            letter-spacing: 0.04em !important;
-            line-height: 1.2 !important;
-            margin-bottom: 0.1rem !important;
-        }
-        .eyebrow-tag {
-            display: none !important;
-        }
-        .eyebrow-sep:last-of-type {
             display: none !important;
         }
         .tpc-slim-title {
-            font-size: 1.12rem !important;
-            line-height: 1.25 !important;
+            margin: 0 !important;
+            line-height: 1.15 !important;
+        }
+        .title-brand {
+            font-size: 1.1rem !important;
+            font-weight: 800 !important;
+            color: #FFFFFF !important;
+            letter-spacing: -0.02em !important;
+        }
+        .title-sep, .title-tagline {
+            display: none !important;
+        }
+        .tpc-mobile-sub {
+            display: block !important;
+            font-size: 0.60rem !important;
+            font-weight: 600 !important;
+            color: #A7F3D0 !important;
+            letter-spacing: 0.04em !important;
+            text-transform: uppercase !important;
+            line-height: 1.1 !important;
+            margin-top: 1px !important;
         }
 
-        /* Latest Resolution Banner on Mobile */
+        /* Streamlined Latest Resolution Banner on Mobile */
         .latest-focus-banner {
-            padding: 0.45rem 0.75rem !important;
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            gap: 0.35rem !important;
-            border-radius: 10px !important;
+            padding: 0.35rem 0.65rem !important;
+            margin-bottom: 0.45rem !important;
+            border-radius: 8px !important;
+            flex-direction: row !important;
+            justify-content: space-between !important;
+            align-items: center !important;
         }
         .focus-title-wrap {
             gap: 0.35rem !important;
         }
         .focus-tag {
-            font-size: 0.66rem !important;
-            padding: 0.18rem 0.5rem !important;
+            font-size: 0.62rem !important;
+            padding: 0.15rem 0.45rem !important;
+            letter-spacing: 0.02em !important;
         }
         .focus-desc {
-            font-size: 0.76rem !important;
-            line-height: 1.3 !important;
+            font-size: 0.72rem !important;
+            line-height: 1.2 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            max-width: 175px !important;
         }
         .focus-badge {
             display: none !important;
         }
 
         /* Tabs on Mobile */
+        div[data-testid="stTabs"] {
+            margin-top: -0.15rem !important;
+            margin-bottom: 0.35rem !important;
+        }
         div[data-testid="stTabs"] button[role="tab"] {
-            font-size: 0.80rem !important;
-            padding: 0.4rem 0.65rem !important;
+            font-size: 0.78rem !important;
+            padding: 0.35rem 0.55rem !important;
+            gap: 0.25rem !important;
+        }
+        div[data-testid="stTabs"] button[role="tab"] p {
+            font-size: 0.78rem !important;
         }
 
         /* Chat Messages on Mobile */
@@ -701,30 +773,84 @@ CUSTOM_CSS = """
             padding: 0.45rem 0.75rem !important;
             min-height: 40px !important;
         }
+        div.stButton > button:active {
+            transform: scale(0.97) !important;
+        }
 
-        /* Bottom Chat Input on Mobile */
+        /* Native App-Like Pill Chatbox & Dock on Mobile */
         div[data-testid="stBottom"] {
-            padding-top: 0.35rem !important;
-            padding-bottom: 0.25rem !important;
+            background: rgba(244, 251, 247, 0.98) !important;
+            backdrop-filter: blur(14px) !important;
+            -webkit-backdrop-filter: blur(14px) !important;
+            border-top: 1px solid rgba(16, 185, 129, 0.22) !important;
+            padding-top: 0.25rem !important;
+            padding-bottom: max(6px, env(safe-area-inset-bottom)) !important;
+            box-shadow: 0 -3px 12px rgba(6, 78, 59, 0.06) !important;
+        }
+        div[data-testid="stChatInput"] {
+            padding: 0 !important;
+            margin: 0 !important;
         }
         div[data-testid="stChatInput"] > div {
-            border-width: 2px !important;
-            border-radius: 14px !important;
-            padding: 0.25rem 0.5rem !important;
+            border: 1.5px solid #059669 !important;
+            border-radius: 22px !important;
+            box-shadow: 0 2px 8px rgba(6, 78, 59, 0.08) !important;
+            padding: 0.1rem 0.45rem 0.1rem 0.75rem !important;
+            background-color: #FFFFFF !important;
+            transform: none !important;
+            min-height: 42px !important;
+        }
+        div[data-testid="stChatInput"] > div:focus-within {
+            border-color: #064E3B !important;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.28) !important;
+            transform: none !important;
+        }
+        div[data-testid="stChatInput"] textarea {
+            font-size: 16px !important; /* Strict 16px prevents iOS Safari auto-zoom/jump */
+            font-weight: 500 !important;
+            line-height: 1.35 !important;
+            padding: 0.35rem 0.1rem !important;
+            max-height: 90px !important;
+        }
+        div[data-testid="stChatInput"] textarea::placeholder {
+            font-size: 0.80rem !important;
+            font-weight: 500 !important;
+            color: #047857 !important;
+            opacity: 0.75 !important;
         }
         div[data-testid="stChatInput"] button {
-            width: 36px !important;
-            height: 36px !important;
-            border-radius: 10px !important;
+            width: 32px !important;
+            height: 32px !important;
+            min-width: 32px !important;
+            border-radius: 50% !important;
+            background: linear-gradient(135deg, #065F46 0%, #10B981 100%) !important;
+            box-shadow: 0 2px 6px rgba(6, 95, 70, 0.3) !important;
+            margin: auto 0 !important;
+            padding: 0 !important;
         }
+        div[data-testid="stChatInput"] button:active {
+            transform: scale(0.92) !important;
+        }
+        div[data-testid="stChatInput"] button svg {
+            width: 14px !important;
+            height: 14px !important;
+        }
+
+        /* Minimal Docked Disclaimer on Mobile (frees ~65px screen height) */
         .docked-disclaimer {
-            font-size: 0.65rem !important;
-            padding: 0.15rem 0 0.25rem 0 !important;
-            line-height: 1.25 !important;
+            font-size: 0.60rem !important;
+            padding: 0.1rem 0 0.15rem 0 !important;
+            line-height: 1.2 !important;
+            margin: 0.1rem 0 0 0 !important;
+        }
+        .disclaimer-desktop-only {
+            display: none !important;
+        }
+        .disclaimer-mobile-only {
+            display: inline !important;
         }
         .disclaimer-sub {
-            font-size: 0.60rem !important;
-            margin-top: 0.1rem !important;
+            display: none !important;
         }
 
         /* Hero Card on Mobile */
@@ -1219,13 +1345,18 @@ def run_app():
     # FIXED BOTTOM CANVAS: INPUT FIELD & DOCKED FOOTER
     # -------------------------------------------------------------------------
     with st.bottom:
-        user_typed = st.chat_input("💬 Ask about TPC admissions, courses, uniform rules, curfew, scholarships...")
+        user_typed = st.chat_input("💬 Ask about TPC admissions, courses, dress code, curfew, scholarships...")
         st.markdown("""
         <div class="docked-disclaimer">
             <div class="disclaimer-title">
-                <strong>Talibon Polytechnic College (TPC)</strong> • Bohol, Philippines &nbsp;|&nbsp; 
-                <em>IS Professional Elective #4 Capstone Project</em> &nbsp;|&nbsp; 
-                <strong style="color: #059669;">Team Kuys</strong>
+                <span class="disclaimer-desktop-only">
+                    <strong>Talibon Polytechnic College (TPC)</strong> • Bohol, Philippines &nbsp;|&nbsp; 
+                    <em>IS Professional Elective #4 Capstone Project</em> &nbsp;|&nbsp; 
+                    <strong style="color: #059669;">Team Kuys</strong>
+                </span>
+                <span class="disclaimer-mobile-only">
+                    🏛️ <strong>TPC Policy AI</strong> • Handbook v.04 &amp; Ord. 127 • <strong>Team Kuys</strong>
+                </span>
             </div>
             <div class="disclaimer-sub">
                 Disclaimer: Synthesized from official TPC documents (Handbook v.04, Ord. 127, RA 10931). For official certifications, consult the Registrar.
@@ -1283,13 +1414,13 @@ def run_app():
             })
 
     # -------------------------------------------------------------------------
-    # MASTER TOP HEADER BAR (Picture 2 style with TPC Logo on upper left)
+    # MASTER TOP HEADER BAR (Compact Responsive Navbar with TPC Seal)
     # -------------------------------------------------------------------------
     logo_b64 = get_tpc_logo_b64()
     if logo_b64:
-        logo_tag = f'<img src="data:image/png;base64,{logo_b64}" style="width: 50px; height: 50px; object-fit: contain; border-radius: 10px; background: rgba(255,255,255,0.95); padding: 3px; box-shadow: 0 2px 8px rgba(0,0,0,0.18);" alt="TPC Official Seal" />'
+        logo_tag = f'<img src="data:image/png;base64,{logo_b64}" class="tpc-header-logo" alt="TPC Official Seal" />'
     else:
-        logo_tag = '<span style="font-size: 2.1rem;">🏛️</span>'
+        logo_tag = '<span class="tpc-header-emoji">🏛️</span>'
 
     st.markdown(f"""
     <div class="tpc-slim-card">
@@ -1303,7 +1434,10 @@ def run_app():
                     <span class="eyebrow-sep">•</span>
                     <span class="eyebrow-tag">OFFICIAL AI POLICY PORTAL</span>
                 </div>
-                <h1 class="tpc-slim-title">TPoliCynav: The TPC Policy Navigator</h1>
+                <h1 class="tpc-slim-title">
+                    <span class="title-brand">TPoliCynav</span><span class="title-sep">:</span> <span class="title-tagline">The TPC Policy Navigator</span>
+                </h1>
+                <div class="tpc-mobile-sub">TPC Policy Navigator • Bohol</div>
             </div>
         </div>
     </div>
@@ -1312,7 +1446,7 @@ def run_app():
     # -------------------------------------------------------------------------
     # MAIN CONTENT TABS
     # -------------------------------------------------------------------------
-    tab_chat, tab_about = st.tabs(["💬 Policy Navigator", "ℹ️ About the Chatbot & Architecture"])
+    tab_chat, tab_about = st.tabs(["💬 Policy Navigator", "ℹ️ About & Architecture"])
 
     assistant_avatar = TPC_LOGO_PATH if (TPC_LOGO_PATH and os.path.exists(TPC_LOGO_PATH)) else "🏛️"
 
