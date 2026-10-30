@@ -177,9 +177,9 @@ def build_script_document():
     timing_data = [
         ("Part & Order", "Assigned Presenter", "Required Topic / Content", "Estimated Duration"),
         ("Part 1: Problem & Data", "Eduardo Avenido Jr.", "Team intro, problem statement, 7 official TPC policy sources", "0:00 – 1:30 (1m 30s)"),
-        ("Part 2: Architecture", "Nielbert Garcia", "BGE-Small embedding, Pinecone vector store, 0.50 guardrail, LangChain", "1:30 – 2:45 (1m 15s)"),
+        ("Part 2: Architecture", "Nielbert Garcia", "BGE-Small embedding, Pinecone vector store, Multi-Layer 0.60 Guardrail, LangChain", "1:30 – 2:45 (1m 15s)"),
         ("Part 3: Live Walkthrough", "Marcel Avergonzado", "Public Railway link, zero login, UI layout, mobile responsiveness", "2:45 – 3:45 (1m 00s)"),
-        ("Part 4: Live Test Inquiries", "Marcel Avergonzado", "3 questions: Programs offered, Curfew rules, Out-of-scope refusal", "3:45 – 5:15 (1m 30s)"),
+        ("Part 4: Live Test Inquiries", "Marcel Avergonzado", "3 questions: Programs offered, Curfew rules, Multi-Layer Out-of-Scope refusal", "3:45 – 5:15 (1m 30s)"),
         ("Part 5: Improvements & Close", "Ronald M. Barril", "Multilingual (Bisaya), SIS integration, voice input, conclusion", "5:15 – 6:30 (1m 15s)")
     ]
 
@@ -284,7 +284,7 @@ def build_script_document():
     add_callout_box(
         doc,
         "Display the 'About the Chatbot & Architecture' tab on the live website, or a clean architecture diagram slide "
-        "showing the flow: PDF Documents -> Chunking -> BGE-Small -> Pinecone Vector Store -> 0.50 Cosine Guardrail -> LLM -> Streamlit UI."
+        "showing the flow: PDF Documents -> Chunking -> BGE-Small -> Pinecone Vector Store -> Multi-Layer Guardrails (0.60 Cosine + Lexical Verification) -> LLM -> Streamlit UI."
     )
 
     p2_spk = doc.add_paragraph()
@@ -306,12 +306,14 @@ def build_script_document():
         '3. Vector Database & Storage: We implemented a hybrid architecture. In the cloud, we use Pinecone Serverless deployed in AWS us-east-1 '
         'for lightning-fast sub-50-millisecond cosine vector searches. As a resilience backup, our system includes an automatic local NumPy dense matrix '
         'fallback so the chatbot never goes down even during cloud network blips.\n\n'
-        '4. Scope Containment Guardrail (Strict 0.50 Cosine Threshold): This is our most critical guardrail against hallucinations. '
-        'Before any LLM generates an answer, we evaluate the cosine similarity of the retrieved passages. If the highest score is below 0.50, '
-        'the system safely refuses to answer and redirects the student to the Registrar or OSAS, guaranteeing zero false policy advice.\n\n'
+        '4. Multi-Layer Scope Containment & Anti-Hallucination Guardrails: This is our most critical defense against AI hallucinations. '
+        'Dense embeddings naturally exhibit an ambient similarity floor around 0.45 to 0.55 for general English sentences. To prevent off-topic hallucinations, '
+        'we raised our threshold to 0.60 and implemented a three-tier defense: First, an instant intent classifier that blocks programming tasks, math homework, and general trivia; '
+        'Second, our strict 0.60 cosine vector threshold; and Third, a substantive lexical alignment check that guarantees retrieved policy chunks actually discuss the student’s specific inquiry before extracting. '
+        'If a question is off-topic, the system safely refuses and redirects the student to the Registrar or OSAS, guaranteeing zero false policy advice.\n\n'
         '5. Orchestration & Conversational Memory: We used LangChain with a 5-turn sliding window memory buffer. '
         'This allows students to ask natural follow-up questions — like saying \"What about shoes?\" after asking about uniforms — and the model '
-        'resolves the context accurately.\n\n'
+        'resolves the context accurately without bleeding context into unrelated turns.\n\n'
         '6. Deployment & Hosting: The application is containerized with Docker and continuously deployed on Railway Cloud via GitHub CI/CD, '
         'running 24/7 on a public link without requiring any login.\n\n'
         'Now, I will turn the presentation over to Marcel Avergonzado for a live walkthrough of our deployed app and sample test questions."'
@@ -436,13 +438,14 @@ def build_script_document():
         doc,
         "Click the sidebar button '🔴 Out-of-Scope Test (Refusal Guardrail)' or type: "
         "'What is the capital city and total population of Tokyo, Japan?' "
-        "Highlight the polite refusal message and notice that it refuses without hallucinating."
+        "Highlight the official Institutional Scope Notice that refuses cleanly without hallucinating. "
+        "Mention that asking for coding, math, or jokes is also cleanly intercepted."
     )
 
     p4_q3 = doc.add_paragraph()
     p4_q3.paragraph_format.space_after = Pt(6)
     p4_q3.paragraph_format.line_spacing = 1.2
-    p4_q3.add_run("SPEAKING SCRIPT (Sample Question 3 — Out-of-Scope Refusal Guardrail):\n").bold = True
+    p4_q3.add_run("SPEAKING SCRIPT (Sample Question 3 — Multi-Layer Out-of-Scope Refusal Guardrail):\n").bold = True
     p4_q3_text = (
         '"Sample Question 3: The critical negative test — a question the documents CANNOT answer.\n'
         'The project rubric strictly requires that our chatbot handle out-of-scope inquiries without making things up.\n'
@@ -450,11 +453,11 @@ def build_script_document():
         '\"What is the capital city and total population of Tokyo, Japan?\"\n\n'
         '[Wait for output]\n\n'
         'Notice the result! The chatbot does NOT hallucinate or pretend to know. '
-        'Because Tokyo’s population is not in the TPC policy corpus, the cosine similarity score fell below our 0.50 threshold. '
-        'Our guardrail intercepted the request and safely responded: '
-        '\"I apologize, but this topic is outside the official scope of Talibon Polytechnic College institutional policies. '
-        'For college-related inquiries, please consult the Registrar or Office of Student Affairs.\"\n\n'
-        'This proves our RAG pipeline has strict containment and will never mislead students with fabricated answers.\n\n'
+        'Because Tokyo’s population is not in the TPC policy corpus, our multi-layer guardrail intercepted the request immediately. '
+        'It displays an official Institutional Scope Notice explaining that the inquiry falls outside authorized TPC publications, '
+        'and clearly guides students on verified topics they can ask about — such as admissions, uniform dress codes, curfew hours, and scholarships.\n\n'
+        'Even if a user asks to write Python code, solve math equations, or tell jokes, our pre-retrieval intent classifier and calibrated 0.60 threshold ensure '
+        'zero false advice and zero hallucinations.\n\n'
         'Now, I will pass the microphone to Ronald M. Barril to discuss our planned future improvements and conclude our presentation."'
     )
     p4_q3.add_run(p4_q3_text).font.size = Pt(11)
