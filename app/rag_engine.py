@@ -190,7 +190,7 @@ class TPCRagEngine:
         if self.mode != "offline" and HF_TOKEN and not HF_TOKEN.startswith("your_"):
             try:
                 from huggingface_hub import InferenceClient
-                self.hf_client = InferenceClient(token=HF_TOKEN, timeout=12)
+                self.hf_client = InferenceClient(token=HF_TOKEN, timeout=4)
             except Exception:
                 self.hf_client = None
 
